@@ -1,6 +1,6 @@
 // fetch/fetchJobLinksUser.ts
 
-import { ElementHandle, Page } from 'puppeteer';
+import { Page } from 'puppeteer';
 import LanguageDetect from 'languagedetect';
 import buildUrl from '../utils/buildUrl';
 import wait from '../utils/wait';
@@ -9,6 +9,7 @@ import fs from 'fs';
 
 const languageDetector = new LanguageDetect();
 
+// A função para pegar os metadados continua a mesma, pois funciona bem.
 async function getJobSearchMetadata({ page, location, keywords }: { page: Page, location: string, keywords: string }) {
   console.log('Construindo URL de busca direta...');
   const url = new URL('https://www.linkedin.com/jobs/search/');
@@ -20,18 +21,21 @@ async function getJobSearchMetadata({ page, location, keywords }: { page: Page, 
   await page.goto(url.toString(), { waitUntil: 'load' });
   await page.waitForTimeout(2000);
 
-  console.log('Aguardando a contagem de resultados...');
-  const numJobsHandle = await page.waitForSelector(selectors.searchResultListText, { timeout: 15000 }) as ElementHandle<HTMLElement>;
-
-  const availableJobsText = await numJobsHandle.evaluate((el) => (el as HTMLElement).innerText);
-  const numAvailableJobs = parseInt(availableJobsText.replace(/\D/g, ''));
-
-  console.log(`${numAvailableJobs} vagas encontradas.`);
-
-  const currentUrl = new URL(page.url());
-  const geoId = currentUrl.searchParams.get('geoId');
-
-  return { geoId, numAvailableJobs };
+  try {
+    console.log('Aguardando a contagem de resultados...');
+    const numJobsHandle = await page.waitForSelector(selectors.searchResultListText, { timeout: 15000 });
+    // @ts-ignore
+    const availableJobsText = await numJobsHandle.evaluate((el) => (el as HTMLElement).innerText);
+    const numAvailableJobs = parseInt(availableJobsText.replace(/\D/g, ''));
+    console.log(`${numAvailableJobs} vagas encontradas.`);
+    const currentUrl = new URL(page.url());
+    const geoId = currentUrl.searchParams.get('geoId');
+    return { geoId, numAvailableJobs };
+  } catch (error) {
+    console.log('Não foi possível encontrar a contagem de vagas. Salvando HTML e continuando com um número padrão.');
+    fs.writeFileSync(`pagina_erro_contagem.html`, await page.content());
+    return { geoId: null, numAvailableJobs: 25 }; // Retorna um valor padrão para não quebrar
+  }
 };
 
 interface PARAMS {
@@ -44,21 +48,22 @@ interface PARAMS {
   jobDescriptionLanguages: string[]
 };
 
+// ### LÓGICA COMPLETAMENTE NOVA ###
 async function* fetchJobLinksUser({
-  page,
-  location,
-  keywords,
-  workplace: { remote, onSite, hybrid },
-  jobTitle,
-  jobDescription,
-  jobDescriptionLanguages
-}: PARAMS): AsyncGenerator<[string, string, string]> {
+                                    page: listingPage,
+                                    location,
+                                    keywords,
+                                    workplace: { remote, onSite, hybrid },
+                                    jobTitle,
+                                    jobDescription,
+                                    jobDescriptionLanguages
+                                  }: PARAMS): AsyncGenerator<[string, string, string]> {
   let numSeenJobs = 0;
   let numMatchingJobs = 0;
   let pageNum = 0;
 
   const fWt = [onSite, remote, hybrid].reduce((acc, c, i) => c ? [...acc, i + 1] : acc, [] as number[]).join(',');
-  const { geoId, numAvailableJobs } = await getJobSearchMetadata({ page, location, keywords });
+  const { geoId, numAvailableJobs } = await getJobSearchMetadata({ page: listingPage, location, keywords });
 
   const maxJobsToProcess = Math.min(numAvailableJobs, 999);
 
@@ -69,10 +74,7 @@ async function* fetchJobLinksUser({
     f_WT: fWt,
     f_AL: 'true'
   };
-
-  if (geoId) {
-    searchParams.geoId = geoId.toString();
-  }
+  if (geoId) searchParams.geoId = geoId.toString();
 
   const url = buildUrl('https://www.linkedin.com/jobs/search', searchParams);
   const jobTitleRegExp = new RegExp(jobTitle, 'i');
@@ -82,63 +84,36 @@ async function* fetchJobLinksUser({
     pageNum++;
     url.searchParams.set('start', numSeenJobs.toString());
 
-    console.log(`\nNavegando para a página ${pageNum} de resultados...`);
-    await page.goto(url.toString(), { waitUntil: "load" });
+    console.log(`\n--- Navegando para a página ${pageNum} de resultados... ---`);
+    await listingPage.goto(url.toString(), { waitUntil: "load" });
 
-    try {
-      console.log('Aguardando a lista de vagas aparecer...');
-      await page.waitForSelector(selectors.searchResultListItem, { visible: true, timeout: 15000 });
-      console.log('Lista de vagas detectada.');
-    } catch (error) {
-        console.warn(`AVISO: A página ${pageNum} não carregou a lista de vagas. Pode ser um limite do LinkedIn.`);
+    // 1. Coleta todos os links da página de uma vez.
+    console.log('Coletando links da página...');
+    const linksOnPage = await listingPage.$$eval(selectors.searchResultListItemLink, (elements) =>
+        elements.map(el => (el as HTMLLinkElement).href.trim())
+    );
 
-        // ### CÓDIGO ADICIONADO AQUI ###
-        console.log('Salvando o HTML da página para análise...');
-        fs.writeFileSync(`pagina_erro_lista_vagas_p${pageNum}.html`, await page.content());
-        console.log(`Arquivo 'pagina_erro_lista_vagas_p${pageNum}.html' salvo!`);
-        // ##############################
-
-        await page.screenshot({ path: `erro_limite_linkedin_pagina_${pageNum}.png`, fullPage: true });
-        break;
-    }
-
-    const jobListings = await page.$$(selectors.searchResultListItem);
-
-    if (jobListings.length === 0) {
-      console.warn(`AVISO: A página ${pageNum} não contém vagas. Finalizando a busca.`);
+    if (linksOnPage.length === 0) {
+      console.warn(`AVISO: Nenhum link de vaga encontrado na página ${pageNum}. Pode ser um limite do LinkedIn.`);
+      fs.writeFileSync(`pagina_erro_links_p${pageNum}.html`, await listingPage.content());
       break;
     }
 
-    for (const jobListing of jobListings) {
-      let title = 'N/A';
-      let companyName = 'N/A';
-      let link = '#';
+    console.log(`Encontrados ${linksOnPage.length} links. Analisando cada um individualmente...`);
 
+    // 2. Visita cada link para analisar a vaga.
+    for (const link of linksOnPage) {
+      let title = 'N/A', companyName = 'N/A', jobDescriptionText = '';
       try {
-        title = await jobListing.$eval(selectors.searchResultListItemLink, el => (el as HTMLElement).innerText.trim()).catch(() => 'Título não encontrado');
-        companyName = await jobListing.$eval(selectors.searchResultListItemCompanyName, el => (el as HTMLElement).innerText.trim()).catch(() => 'Empresa não encontrada');
+        await listingPage.goto(link, { waitUntil: 'load', timeout: 45000 });
+
+        title = await listingPage.$eval(selectors.jobTitle, el => (el as HTMLElement).innerText.trim());
+        companyName = await listingPage.$eval(selectors.companyName, el => (el as HTMLElement).innerText.trim());
+        jobDescriptionText = await listingPage.$eval(selectors.jobDescription, el => (el as HTMLElement).innerText);
 
         console.log(`\n--- Analisando Vaga: ${title} @ ${companyName} ---`);
 
-        // 2. Clica no card para carregar os detalhes na coluna da direita.
-        const linkHandle = await jobListing.$(selectors.searchResultListItemLink);
-        if (!linkHandle) {
-          console.log('  = ❌ Ignorando vaga (não foi possível encontrar o link).');
-          continue;
-        }
-        await linkHandle.click();
-        link = await linkHandle.evaluate(el => (el as HTMLLinkElement).href.trim());
-
-        // 3. Espera os detalhes carregarem.
-        await page.waitForFunction((s) => {
-          const hasDesc = !!document.querySelector<HTMLElement>(s.jobDescription)?.innerText.trim();
-          const hasStatus = !!(document.querySelector(s.easyApplyButtonEnabled) || document.querySelector(s.appliedToJobFeedback));
-          return hasDesc && hasStatus;
-        }, { timeout: 7000 }, selectors);
-
-        // 4. Analisa os detalhes.
-        const jobDescriptionText = await page.$eval(selectors.jobDescription, el => (el as HTMLElement).innerText);
-        const canApply = !!(await page.$(selectors.easyApplyButtonEnabled));
+        const canApply = !!(await listingPage.$(selectors.easyApplyButtonEnabled));
         const matchesTitle = jobTitleRegExp.test(title);
         const matchesDescription = jobDescriptionRegExp.test(jobDescriptionText);
         const jobDescriptionLanguage = languageDetector.detect(jobDescriptionText, 1)[0][0];
@@ -156,13 +131,18 @@ async function* fetchJobLinksUser({
         } else {
           console.log('  = ❌ Ignorando vaga.');
         }
-
       } catch (e: any) {
-        console.log(`Erro ao processar a vaga "${title}": ${e.message}. Pulando para a próxima.`);
+        console.log(`Erro ao processar o link ${link}: ${e.message}. Pulando para a próxima.`);
+
+        // ### CÓDIGO ADICIONADO PARA SALVAR O HTML DA PÁGINA DA VAGA ###
+        console.log('Salvando HTML da página da vaga que falhou para análise...');
+        fs.writeFileSync(`pagina_erro_DETALHES_VAGA.html`, await listingPage.content());
+        console.log("Arquivo 'pagina_erro_DETALHES_VAGA.html' salvo. Por favor, envie este arquivo.");
+        // ##############################################################
       }
     }
 
-    numSeenJobs += jobListings.length;
+    numSeenJobs += linksOnPage.length;
     console.log(`\nProgresso: ${numSeenJobs} de ${maxJobsToProcess} vagas vistas. ${numMatchingJobs} vagas compatíveis encontradas até agora.`);
     await wait(3000);
   }
