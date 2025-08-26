@@ -1,61 +1,25 @@
 export default {
+  LINKEDIN_EMAIL: "seu_email@aqui.com",
+  LINKEDIN_PASSWORD: "sua_senha_aqui",
 
-  LINKEDIN_EMAIL: "jonataskalebe900@gmail.com",
-  LINKEDIN_PASSWORD: "Machocado2#",
+  // ### NOVO CAMPO PARA O TEMPLATE LATEX ###
+  // Caminho para o seu arquivo .txt que contém o código LaTeX base do seu currículo.
+  CV_LATEX_TEMPLATE_PATH: "C:\\Caminho\\Completo\\Para\\seu_template_latex.txt",
 
+  // Caminho para o PDF original (ainda pode ser útil no futuro)
+  CV_PATH: "C:\\Caminho\\Completo\\Para\\Seu\\CV_Original.pdf",
 
-  KEYWORDS: "Software Engineer Java Spring Boot Angular Flutter",
+  KEYWORDS: "Software Engineer Java Spring Boot",
   LOCATION: "Worldwide",
-  WORKPLACE: {
-    REMOTE: true,
-    ON_SITE: false,
-    HYBRID: false,
-  },
+  // ... resto das suas configurações ...
 
-  JOB_TITLE: ".*", JOB_DESCRIPTION: ".",
-  JOB_DESCRIPTION_LANGUAGES: ["any"],
-  PHONE: "+5562993442104",
-  CV_PATH: "C:\\Trabalho\\Resume\\agendamentos_20250717_213755.pdf",
-  COVER_LETTER_PATH: "C:\\Caminho\\Completo\\Para\\Sua\\CoverLetter.pdf",
-  CV_TEXT_PATH: "C:\\Trabalho\\Resume\\cur.txt",
-  HOME_CITY: "Goiânia, Brazil",
-
-
-  YEARS_OF_EXPERIENCE: {
-    "java": 4,
-    "spring": 4,
-    "angular": 4,
-    "flutter": 2,
-    "typescript": 4,
-    "aws": 3,
-    "docker": 3,
-    "kubernetes": 2,
-    "sql": 4,
-    "git": 4,
-    "rest api": 4
-  },
-
-
-  LANGUAGE_PROFICIENCY: {
-    "english": "professional",
-    "french": "basic"
-  },
-
-
-  REQUIRES_VISA_SPONSORSHIP: false,
-  TEXT_FIELDS: { "salary": "60k" },
-  BOOLEANS: {
-    "(bachelor|degree|bacharel|graduaç|formação|superior)": false,
-    "(authorized|eligible|work permit).*brazil": true,
-    "(authorized|eligible|work permit).*(USA|Canada|Europe)": false,
-    "sponsorship": false
-  },
-
-
-  MULTIPLE_CHOICE_FIELDS: {
-    "pronouns": "He/him"
-  },
-
-
-  SINGLE_PAGE: false,
+  // Perfil para a IA (pode adicionar mais detalhes aqui para ajudar a IA)
+  AI_USER_PROFILE: `
+    - Engenheiro de Software Sênior com 4 anos de experiência em Java e Spring Boot.
+    -Cursando superior em ciencia da computação (6º período).
+    - Foco em desenvolvimento backend, APIs RESTful e microserviços.
+    - Experiência sólida com bancos de dados SQL e NoSQL.
+    - Proficiente em Inglês.
+    - Buscando oportunidades remotas em empresas internacionais.
+  `
 }

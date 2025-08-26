@@ -1,7 +1,7 @@
 import {ElementHandle, Page} from 'puppeteer';
 
 import selectors from '../selectors';
-import {learnAndSave, UnlearnedQuestionError} from "../learning";
+import {isElementFilled, learnAndSave, UnlearnedQuestionError} from "../learning";
 
 async function fillBoolean(page: Page, booleans: { [key: string]: boolean }, resumeText: string): Promise<void> {
   const handledQuestions = new Set<string>();
@@ -35,6 +35,12 @@ async function fillBoolean(page: Page, booleans: { [key: string]: boolean }, res
     if (requiredLabelEl) {
       const label = await requiredLabelEl.evaluate(el => el.textContent?.trim().replace(/\*/g, '').trim() || '');
       if (label && !handledQuestions.has(label)) {
+        // ### LÓGICA DE VERIFICAÇÃO ADICIONADA AQUI ###
+        if (await isElementFilled(fieldset)) {
+          console.log(`- Campo "${label}" já preenchido (provavelmente pelo LinkedIn). Pulando.`);
+          continue;
+        }
+
         try {
           // Passa o elemento 'fieldset' para a função de aprendizagem
           const aiAnswer = await learnAndSave(page, fieldset, 'BOOLEANS', label, resumeText);

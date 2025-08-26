@@ -1,6 +1,6 @@
 import {Page} from 'puppeteer';
 import selectors from '../selectors';
-import {learnAndSave, UnlearnedQuestionError} from '../learning';
+import {isElementFilled, learnAndSave, UnlearnedQuestionError} from '../learning';
 
 interface MultipleChoiceFields {
   [labelRegex: string]: string;
@@ -16,8 +16,18 @@ async function fillMultipleChoiceFields(page: Page, multipleChoiceFields: Multip
       const label = await page.$eval(`label[for="${id}"]`, (el) => (el as HTMLElement).innerText.trim()).catch(() => '');
       if (!label) continue;
 
-    if (/e-mail|phone|telefone|código do país|city|cidade/i.test(label)) {
-        handledSelects.add(id); // Marca como "ignorado" para não ser aprendido
+    // ### CORREÇÃO 1: FILTRO MUITO MAIS ROBUSTO ###
+    // Ignora variações de email, telefone e cidade em múltiplos idiomas.
+    if (/e-mail|email address|indirizzo email|phone|telefone|código do país|país|country code|city|cidade/i.test(label)) {
+        // Se for um dropdown de email, apenas seleciona a única opção válida
+        if(/e-mail|email address|indirizzo email/i.test(label)) {
+            const emailOption = await select.$('option:not([value="Select an option"])');
+            if(emailOption) {
+                const emailValue = await emailOption.evaluate(el => (el as HTMLOptionElement).value);
+                await select.select(emailValue);
+            }
+        }
+        handledSelects.add(id);
         continue;
     }
 
@@ -44,16 +54,24 @@ async function fillMultipleChoiceFields(page: Page, multipleChoiceFields: Multip
 
         const label = await page.$eval(`label[for="${id}"]`, (el) => (el as HTMLElement).innerText.trim()).catch(() => '');
         if (label) {
+        if (await isElementFilled(select)) {
+          console.log(`- Campo "${label}" já preenchido (provavelmente pelo LinkedIn). Pulando.`);
+          continue;
+        }
+
             try {
             const availableOptions = await select.$$eval('option', options =>
-                options.map(o => o.innerText).filter(t => t.trim() !== '' && !/select/i.test(t))
+                options.map(o => o.innerText.trim()).filter(t => t !== '' && !/select an option|selecione uma opção/i.test(t))
             );
 
-            // Cria uma pergunta mais contextual para a IA
-            const questionWithOptions = `${label}\nOpções disponíveis: [${availableOptions.join(', ')}]`;
+            // ### CORREÇÃO 2: LIMPEZA DO LABEL ###
+            // Pega apenas a primeira linha do label para evitar duplicação.
+            const cleanedLabel = label.split('\n')[0].trim();
+            const questionWithOptions = `${cleanedLabel}\nOpções disponíveis: [${availableOptions.join(', ')}]`;
 
             const aiAnswer = await learnAndSave(page, select, 'MULTIPLE_CHOICE_FIELDS', questionWithOptions, resumeText);
 
+            if (aiAnswer !== null) {
             const optionToSelect = await select.$$eval(selectors.option, (options, val) => {
               const opt = (options as HTMLOptionElement[]).find(o => o.innerText.toLowerCase().includes(val.toLowerCase()));
                     return opt ? opt.value : null;
@@ -61,10 +79,11 @@ async function fillMultipleChoiceFields(page: Page, multipleChoiceFields: Multip
 
                 if (optionToSelect) {
                     await select.select(optionToSelect);
-                    handledSelects.add(id);
                 } else {
                     console.warn(`IA sugeriu "${aiAnswer}", mas não encontrei uma opção correspondente para "${label}".`);
                 }
+            }
+            handledSelects.add(id);
             } catch (error) {
                 if (error instanceof UnlearnedQuestionError) throw error;
                 console.error(`Erro ao tentar aprender o campo de múltipla escolha: ${label}`, error);

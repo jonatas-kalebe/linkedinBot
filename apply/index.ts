@@ -68,48 +68,25 @@ async function apply({page, link, formData, shouldSubmit, resumeText}: Params): 
   try {
     await clickEasyApplyButton(page);
   } catch {
-    console.log(`Easy apply button not found in posting: ${link}`);
+      console.log(`Botão "Easy Apply" não encontrado na vaga: ${link}`);
     return;
   }
 
   await page.waitForSelector(`${selectors.easyApplyModal}`, { timeout: 15000 });
 
-
-    for (let currentPage = 1; currentPage <= 10; currentPage++) {
+    // ### LÓGICA DE LOOP TOTALMENTE REFEITA ###
+    // Um loop 'while' que roda até 20 vezes (um limite de segurança alto)
+    // ou até encontrar o botão de submeter.
+    let currentPage = 1;
+    while (currentPage <= 20) { // Limite de segurança para evitar loops infinitos
     console.log(`Preenchendo página ${currentPage} do formulário...`);
       await fillFields(page, formData, resumeText);
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const isSubmitButtonVisible = await page.$(selectors.submit);
-
-    if (isSubmitButtonVisible) {
-      console.log('Página de envio/revisão alcançada.');
-      break;
-    }
-
-    try {
-      await clickNextButton(page);
-    } catch (error) {
-      console.log('Não foi possível encontrar o botão "Próximo". Verificando se é a última página...');
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      const finalSubmitCheck = await page.$(selectors.submit);
-      if (finalSubmitCheck) {
-        console.log('Botão de envio encontrado após verificação final.');
-        break;
-      } else {
-        throw new Error('Não foi possível encontrar um botão para avançar ou finalizar a candidatura.');
-    }
-    }
-    await waitForNoError(page).catch(noop);
-  }
-
-    const submitButton = await page.waitForSelector(selectors.submit, {visible: true, timeout: 10000});
-
-  if (!submitButton) {
-    throw new Error('Botão "Submit" não foi encontrado na página final.');
-  }
-
+      // 1. VERIFICA SE É A PÁGINA FINAL (com botão de submeter)
+      const submitButton = await page.$(selectors.submit);
+      if (submitButton) {
+        console.log('Página de envio/revisão alcançada. Finalizando...');
   if (shouldSubmit) {
     await submitButton.click();
 
@@ -121,8 +98,31 @@ async function apply({page, link, formData, shouldSubmit, resumeText}: Params): 
   } else {
     console.log('Modo de simulação (dry run). O botão "Enviar" não foi clicado.');
   }
+        return; // **SUCESSO!** Sai da função apply.
+      }
+
+      // 2. SE NÃO FOR A PÁGINA FINAL, PROCURA O BOTÃO DE AVANÇAR
+      try {
+        await clickNextButton(page);
+      } catch (error) {
+        // Se não encontrou nem "Enviar" nem "Avançar", o bot está preso.
+        throw new Error('Não foi possível encontrar um botão para avançar ou finalizar a candidatura.');
+      }
+
+      await waitForNoError(page).catch(noop);
+      currentPage++;
+    }
+
+    // Se o loop atingir o limite de 20 páginas, lança um erro de segurança.
+    throw new Error('A candidatura excedeu o limite de 20 páginas. Abortando.');
 
   } catch (error: any) {
+    if (error.name === 'UnlearnedQuestionError') {
+        // Se o erro for de uma pergunta nova, ele será relançado para o index.ts tratar
+        throw error;
+    }
+
+    // Para todos os outros erros, salva o HTML
     console.error(`❌ Ocorreu um erro inesperado ao tentar aplicar para a vaga: ${link}`);
     console.error(`Detalhes do erro: ${error.message}`);
 

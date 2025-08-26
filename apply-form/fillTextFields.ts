@@ -1,7 +1,7 @@
 import {Page} from 'puppeteer';
 import selectors from '../selectors';
 import changeTextInput from './changeTextInput';
-import {learnAndSave, UnlearnedQuestionError} from '../learning';
+import {isElementFilled, learnAndSave, UnlearnedQuestionError} from '../learning';
 
 interface TextFields {
   [labelRegex: string]: string | number;
@@ -16,6 +16,11 @@ async function fillTextFields(page: Page, textFields: TextFields, resumeText: st
     if (!id) continue;
     const label = await page.$eval(`label[for="${id}"]`, (el) => (el as HTMLElement).innerText.trim()).catch(() => '');
     if (!label) continue;
+
+    if (/phone|telefone|e-mail|email|city|cidade/i.test(label)) {
+        handledInputs.add(id);
+        continue;
+    }
 
     for (const [labelRegex, value] of Object.entries(textFields)) {
       if (new RegExp(labelRegex, 'i').test(label)) {
@@ -33,6 +38,12 @@ async function fillTextFields(page: Page, textFields: TextFields, resumeText: st
 
     const label = await page.$eval(`label[for="${id}"]`, (el) => (el as HTMLElement).innerText.trim()).catch(() => '');
     if (label) {
+      // ### LÓGICA DE VERIFICAÇÃO ADICIONADA AQUI ###
+      if (await isElementFilled(input)) {
+        console.log(`- Campo "${label}" já preenchido (provavelmente pelo LinkedIn). Pulando.`);
+        continue; // Pula para o próximo campo obrigatório
+      }
+
       try {
         // Passa o elemento 'input' para a função de aprendizagem
         const aiAnswer = await learnAndSave(page, input, 'TEXT_FIELDS', label, resumeText);
