@@ -11,13 +11,13 @@ export default {
     ON_SITE: false,
     HYBRID: false,
   },
-  JOB_TITLE: "(Software Engineer|Software Developer|Full Stack|Full-Stack|Backend|Frontend|Java Developer|Angular Developer|Flutter Developer|Pleno Developer|Mid-Level)",
-  JOB_DESCRIPTION: "^(?=.*(java|spring|angular|flutter|aws|docker|microservices|rest|kafka|kubernetes))((?!(bachelor|degree|graduaç|formado|formação|bacharel|superior completo|6\\+ years|7\\+ years|8\\+ years|10\\+ years|principal|staff engineer|based in|located in|must be in|must reside in|eligible to work in|authorized to work in|work authorization in|U\\.S\\.|United States|Canada|U\\.K\\.|United Kingdom|European Union|EU))(.|\\n|\\r))*$",  JOB_DESCRIPTION_LANGUAGES: ["english", "french"],
 
-
+  JOB_TITLE: ".*", JOB_DESCRIPTION: ".",
+  JOB_DESCRIPTION_LANGUAGES: ["any"],
   PHONE: "+5562993442104",
-  CV_PATH: "C:\\Trabalho\\Resume\\CV_Jonatas-ENG.pdf",
+  CV_PATH: "C:\\Trabalho\\Resume\\agendamentos_20250717_213755.pdf",
   COVER_LETTER_PATH: "C:\\Caminho\\Completo\\Para\\Sua\\CoverLetter.pdf",
+  CV_TEXT_PATH: "C:\\Trabalho\\Resume\\cur.txt",
   HOME_CITY: "Goiânia, Brazil",
 
 

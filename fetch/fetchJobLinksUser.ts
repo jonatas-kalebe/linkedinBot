@@ -1,19 +1,14 @@
-// fetch/fetchJobLinksUser.ts
-
-import { ElementHandle, Page } from 'puppeteer';
-// As importações do 'franc' e 'iso-639-3' foram removidas daqui
+import {ElementHandle, Page} from 'puppeteer';
 import buildUrl from '../utils/buildUrl';
 import wait from '../utils/wait';
 import selectors from '../selectors';
 import fs from 'fs';
 
-// Esta função continua igual, mas a biblioteca 'iso-639-3' será carregada dinamicamente
 function getLanguageName(iso6393Data: any[], code: string): string | undefined {
   const lang = iso6393Data.find(l => l.iso6393 === code);
   return lang ? lang.name.toLowerCase() : undefined;
 }
 
-// A função para pegar os metadados continua a mesma, pois funciona bem.
 async function getJobSearchMetadata({ page, location, keywords }: { page: Page, location: string, keywords: string }) {
   console.log('Construindo URL de busca direta...');
   const url = new URL('https://www.linkedin.com/jobs/search/');
@@ -37,7 +32,7 @@ async function getJobSearchMetadata({ page, location, keywords }: { page: Page, 
   } catch (error) {
     console.log('Não foi possível encontrar a contagem de vagas. Salvando HTML e continuando com um número padrão.');
     fs.writeFileSync(`pagina_erro_contagem.html`, await page.content());
-    return { geoId: null, numAvailableJobs: 25 }; // Retorna um valor padrão para não quebrar
+    return {geoId: null, numAvailableJobs: 25};
   }
 };
 
@@ -51,7 +46,6 @@ interface PARAMS {
   jobDescriptionLanguages: string[]
 };
 
-// ### LÓGICA COMPLETAMENTE NOVA ###
 async function* fetchJobLinksUser({
                                     page: listingPage,
                                     location,
@@ -62,10 +56,8 @@ async function* fetchJobLinksUser({
                                     jobDescriptionLanguages
                                   }: PARAMS): AsyncGenerator<[string, string, string]> {
 
-  // ### CORREÇÃO AQUI: Importação dinâmica das bibliotecas ESM ###
-  const { franc } = await import('franc');
+  const {franc} = await import('franc');
   const { iso6393 } = await import('iso-639-3');
-  // #############################################################
 
   let numSeenJobs = 0;
   let numMatchingJobs = 0;
@@ -96,7 +88,6 @@ async function* fetchJobLinksUser({
     console.log(`\n--- Navegando para a página ${pageNum} de resultados... ---`);
     await listingPage.goto(url.toString(), { waitUntil: "load" });
 
-    // 1. Coleta todos os links da página de uma vez.
     console.log('Coletando links da página...');
     const linksOnPage = await listingPage.$$eval(selectors.searchResultListItemLink, (elements) =>
         elements.map(el => (el as HTMLLinkElement).href.trim())
@@ -110,7 +101,6 @@ async function* fetchJobLinksUser({
 
     console.log(`Encontrados ${linksOnPage.length} links. Analisando cada um individualmente...`);
 
-    // 2. Visita cada link para analisar a vaga.
     for (const link of linksOnPage) {
       let title = 'N/A', companyName = 'N/A', jobDescriptionText = '';
       try {
@@ -126,9 +116,8 @@ async function* fetchJobLinksUser({
         const matchesTitle = jobTitleRegExp.test(title);
         const matchesDescription = jobDescriptionRegExp.test(jobDescriptionText);
 
-        // ### LÓGICA DE IDIOMA CORRIGIDA COM 'franc' ###
         const langCode = franc(jobDescriptionText);
-        const languageDetected = getLanguageName(iso6393, langCode) || 'unknown'; // Passando os dados da biblioteca
+        const languageDetected = getLanguageName(iso6393, langCode) || 'unknown';
         const matchesLanguage = jobDescriptionLanguages.includes("any") || jobDescriptionLanguages.includes(languageDetected);
 
         console.log(`  - Candidatura Simplificada? ${canApply ? '✅' : '❌'}`);
@@ -146,11 +135,9 @@ async function* fetchJobLinksUser({
       } catch (e: any) {
         console.log(`Erro ao processar o link ${link}: ${e.message}. Pulando para a próxima.`);
 
-        // ### CÓDIGO ADICIONADO PARA SALVAR O HTML DA PÁGINA DA VAGA ###
         console.log('Salvando HTML da página da vaga que falhou para análise...');
         fs.writeFileSync(`pagina_erro_DETALHES_VAGA.html`, await listingPage.content());
         console.log("Arquivo 'pagina_erro_DETALHES_VAGA.html' salvo. Por favor, envie este arquivo.");
-        // ##############################################################
       }
     }
 

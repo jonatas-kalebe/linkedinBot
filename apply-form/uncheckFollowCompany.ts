@@ -1,12 +1,17 @@
-import { ElementHandle, Page } from "puppeteer";
+import {Page} from "puppeteer";
 
 import selectors from "../selectors";
 
 async function uncheckFollowCompany(page: Page) {
-  const checkbox = null;
+    const checkbox = await page.$(selectors.followCompanyCheckbox);
 
-  if(checkbox)
-    await (checkbox as ElementHandle<HTMLInputElement>).evaluate(el => el.checked && el.click());
+    if (checkbox) {
+        const isChecked = await checkbox.evaluate(el => (el as HTMLInputElement).checked);
+        if (isChecked) {
+            await checkbox.evaluate(el => (el as HTMLInputElement).click());
+            console.log('Checkbox "Seguir empresa" foi desmarcado.');
+        }
+    }
 }
 
 export default uncheckFollowCompany;

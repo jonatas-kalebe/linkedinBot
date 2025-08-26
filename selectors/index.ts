@@ -19,8 +19,9 @@ export default {
   checkbox: "input[type='checkbox']",
   select: "select",
   option: "option",
-  nextButton: "button[aria-label*='Next'], button[aria-label*='Próximo'], button[aria-label*='Review']",
+  nextButton: "button[aria-label*='Next'], button[aria-label*='Próximo'], button[aria-label*='Review'], button[aria-label*='Revisar'], button[aria-label*='Avançar']",
   submit: "button[aria-label*='Submit application'], button[aria-label*='Enviar candidatura']",
+
   textInput: "input[type='text'], textarea",
   radioInput: "input[type='radio']",
   homeCity: "input[id*='city-HOME-CITY']",

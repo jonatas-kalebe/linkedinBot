@@ -1,28 +1,58 @@
-import { ElementHandle, Page } from 'puppeteer';
+import {ElementHandle, Page} from 'puppeteer';
 
 import selectors from '../selectors';
+import {learnAndSave, UnlearnedQuestionError} from "../learning";
 
-async function fillBoolean(page: Page, booleans: { [key: string]: boolean }): Promise<void> {
-  const fieldsets = await page.$$(selectors.fieldset);
+async function fillBoolean(page: Page, booleans: { [key: string]: boolean }, resumeText: string): Promise<void> {
+  const handledQuestions = new Set<string>();
 
-  // fill 2 option radio button field sets
+  const fieldsets = await page.$$('fieldset');
   for (const fieldset of fieldsets) {
     const options = await fieldset.$$(selectors.radioInput);
+    if (options.length !== 2) continue;
 
-    if (options.length === 2) {
-      const label = await fieldset.$eval('legend', el => el.innerText);
+    const labelEl = await fieldset.$('legend > .t-14');
+    if (!labelEl) continue;
+
+    const label = await labelEl.evaluate(el => el.textContent?.trim() || '');
+    if (!label) continue;
 
       for (const [labelRegex, value] of Object.entries(booleans)) {
-        if (new RegExp(labelRegex, "i").test(label)) {
-          const input = await fieldset.$(`${selectors.radioInput}[value='${value ? 'Yes' : 'No'}']`) as ElementHandle;
+        if (new RegExp(labelRegex, 'i').test(label)) {
+          const valueToClick = value ? 'Yes' : 'No';
+          const inputToClick = await fieldset.$(`input[value="${valueToClick}"]`);
+          if (inputToClick) {
+            await (inputToClick as ElementHandle<HTMLInputElement>).click();
+            handledQuestions.add(label);
+          }
+          break;
+        }
+      }
+    }
 
-          await input.click();
+  for (const fieldset of fieldsets) {
+    const requiredLabelEl = await fieldset.$('legend.fb-dash-form-element__label--is-required');
+    if (requiredLabelEl) {
+      const label = await requiredLabelEl.evaluate(el => el.textContent?.trim().replace(/\*/g, '').trim() || '');
+      if (label && !handledQuestions.has(label)) {
+        try {
+          // Passa o elemento 'fieldset' para a função de aprendizagem
+          const aiAnswer = await learnAndSave(page, fieldset, 'BOOLEANS', label, resumeText);
+
+          // Se a IA retornou uma resposta, preenchemos o campo.
+          if (aiAnswer !== null) {
+          const valueToClick = (aiAnswer === 'true' || aiAnswer === true) ? 'Yes' : 'No';
+          const inputToClick = await fieldset.$(`input[value="${valueToClick}"]`);
+          if (inputToClick) await (inputToClick as ElementHandle<HTMLInputElement>).click();
+          }
+          handledQuestions.add(label);
+        } catch (error) {
+          if (error instanceof UnlearnedQuestionError) throw error;
+          console.error(`Erro ao tentar aprender o campo booleano: ${label}`, error);
         }
       }
     }
   }
-
-  // fill checkboxes
   const checkboxes = await page.$$(selectors.checkbox) as ElementHandle<HTMLInputElement>[];
 
   for (const checkbox of checkboxes) {
@@ -40,7 +70,6 @@ async function fillBoolean(page: Page, booleans: { [key: string]: boolean }): Pr
     }
   }
 
-  // fill 2 option selects
   const selects = await page.$$(selectors.select);
 
   for (const select of selects) {
