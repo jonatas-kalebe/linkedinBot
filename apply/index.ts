@@ -8,8 +8,34 @@ import clickNextButton from '../apply-form/clickNextButton';
 const noop = () => { };
 
 async function clickEasyApplyButton(page: Page): Promise<void> {
-  await page.waitForSelector(selectors.easyApplyButtonEnabled, { timeout: 10000 });
-  await page.click(selectors.easyApplyButtonEnabled);
+  const candidates = [
+    selectors.easyApplyButtonEnabled,
+    selectors.easyApplyButtonId,
+    selectors.easyApplyButtonAria
+  ];
+
+  await page.waitForFunction(
+    (sels) => sels.some((s) => !!document.querySelector(s)),
+    { timeout: 15000 },
+    candidates
+  );
+
+  await page.evaluate((sels) => {
+    const el =
+      sels
+        .map((s) => document.querySelector<HTMLElement>(s))
+        .find((n) => !!n) || null;
+    if (el) {
+      el.scrollIntoView({ block: 'center' });
+      el.click();
+    }
+  }, candidates);
+
+  await page.waitForFunction(
+    (sels) => sels.some((s) => !!document.querySelector(s)),
+    { timeout: 15000 },
+    [selectors.easyApplyModal, selectors.easyApplyHeader, selectors.enabledSubmitOrNextButton]
+  );
 }
 
 export interface ApplicationFormData {
@@ -42,12 +68,18 @@ async function apply({ page, link, formData, shouldSubmit }: Params): Promise<vo
     return;
   }
 
-  // Lógica de loop aprimorada e mais robusta
-  for (let currentPage = 1; currentPage <= 10; currentPage++) { // Um limite de 10 páginas para segurança
+  await page.waitForSelector(`${selectors.easyApplyModal}`, { timeout: 15000 });
+
+
+  // This loop logic is correct and will work on both modal and full-page forms.
+  for (let currentPage = 1; currentPage <= 10; currentPage++) {
     console.log(`Preenchendo página ${currentPage} do formulário...`);
     await fillFields(page, formData);
 
-    const isSubmitButtonVisible = await page.$(selectors.submit);
+    const isSubmitButtonVisible = await page.$(
+      `${selectors.easyApplyModal} ${selectors.submit}, ${selectors.submit}`
+    );
+
     if (isSubmitButtonVisible) {
       console.log('Página de envio/revisão alcançada.');
       break; // Sai do loop, pois chegou na última página
@@ -60,10 +92,12 @@ async function apply({ page, link, formData, shouldSubmit }: Params): Promise<vo
       break; // Sai do loop se não houver mais botão de próximo
     }
 
-    await waitForNoError(page).catch(() => console.log('Um erro menor foi detectado e ignorado na página.'));
+    await waitForNoError(page).catch(noop);
   }
 
-  const submitButton = await page.$(selectors.submit);
+  const submitButton = await page.$(
+    `${selectors.easyApplyModal} ${selectors.submit}, ${selectors.submit}`
+  );
 
   if (!submitButton) {
     throw new Error('Submit button not found');

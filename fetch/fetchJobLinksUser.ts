@@ -1,13 +1,17 @@
 // fetch/fetchJobLinksUser.ts
 
-import { Page } from 'puppeteer';
-import LanguageDetect from 'languagedetect';
+import { ElementHandle, Page } from 'puppeteer';
+// As importações do 'franc' e 'iso-639-3' foram removidas daqui
 import buildUrl from '../utils/buildUrl';
 import wait from '../utils/wait';
 import selectors from '../selectors';
 import fs from 'fs';
 
-const languageDetector = new LanguageDetect();
+// Esta função continua igual, mas a biblioteca 'iso-639-3' será carregada dinamicamente
+function getLanguageName(iso6393Data: any[], code: string): string | undefined {
+  const lang = iso6393Data.find(l => l.iso6393 === code);
+  return lang ? lang.name.toLowerCase() : undefined;
+}
 
 // A função para pegar os metadados continua a mesma, pois funciona bem.
 async function getJobSearchMetadata({ page, location, keywords }: { page: Page, location: string, keywords: string }) {
@@ -24,8 +28,7 @@ async function getJobSearchMetadata({ page, location, keywords }: { page: Page, 
   try {
     console.log('Aguardando a contagem de resultados...');
     const numJobsHandle = await page.waitForSelector(selectors.searchResultListText, { timeout: 15000 });
-    // @ts-ignore
-    const availableJobsText = await numJobsHandle.evaluate((el) => (el as HTMLElement).innerText);
+      const availableJobsText = await (numJobsHandle as ElementHandle<HTMLElement>).evaluate((el) => el.innerText);
     const numAvailableJobs = parseInt(availableJobsText.replace(/\D/g, ''));
     console.log(`${numAvailableJobs} vagas encontradas.`);
     const currentUrl = new URL(page.url());
@@ -58,6 +61,12 @@ async function* fetchJobLinksUser({
                                     jobDescription,
                                     jobDescriptionLanguages
                                   }: PARAMS): AsyncGenerator<[string, string, string]> {
+
+  // ### CORREÇÃO AQUI: Importação dinâmica das bibliotecas ESM ###
+  const { franc } = await import('franc');
+  const { iso6393 } = await import('iso-639-3');
+  // #############################################################
+
   let numSeenJobs = 0;
   let numMatchingJobs = 0;
   let pageNum = 0;
@@ -116,13 +125,16 @@ async function* fetchJobLinksUser({
         const canApply = !!(await listingPage.$(selectors.easyApplyButtonEnabled));
         const matchesTitle = jobTitleRegExp.test(title);
         const matchesDescription = jobDescriptionRegExp.test(jobDescriptionText);
-        const jobDescriptionLanguage = languageDetector.detect(jobDescriptionText, 1)[0][0];
-        const matchesLanguage = jobDescriptionLanguages.includes("any") || jobDescriptionLanguages.includes(jobDescriptionLanguage);
+
+        // ### LÓGICA DE IDIOMA CORRIGIDA COM 'franc' ###
+        const langCode = franc(jobDescriptionText);
+        const languageDetected = getLanguageName(iso6393, langCode) || 'unknown'; // Passando os dados da biblioteca
+        const matchesLanguage = jobDescriptionLanguages.includes("any") || jobDescriptionLanguages.includes(languageDetected);
 
         console.log(`  - Candidatura Simplificada? ${canApply ? '✅' : '❌'}`);
         console.log(`  - Título corresponde ao filtro? ${matchesTitle ? '✅' : '❌'}`);
         console.log(`  - Descrição corresponde ao filtro? ${matchesDescription ? '✅' : '❌'}`);
-        console.log(`  - Idioma (${jobDescriptionLanguage}) corresponde ao filtro? ${matchesLanguage ? '✅' : '❌'}`);
+        console.log(`  - Idioma (${languageDetected}) corresponde ao filtro? ${matchesLanguage ? '✅' : '❌'}`);
 
         if (canApply && matchesTitle && matchesDescription && matchesLanguage) {
           console.log('  = ✅ VAGA COMPATÍVEL! Enviando para aplicação...');
