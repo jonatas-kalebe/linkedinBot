@@ -1,0 +1,104 @@
+\documentclass[10pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[normalem]{ulem}
+\usepackage[svgnames,dvipsnames]{xcolor}
+\usepackage[
+  paperheight=33cm,
+  paperwidth=23cm,
+  left=1.4cm,
+  right=1.4cm,
+  top=1.1cm,
+  bottom=1.1cm
+]{geometry}
+\usepackage[hidelinks]{hyperref}
+\usepackage{enumitem}
+% A opção [explicit] é mantida, pois é a forma correta de manipular o título.
+\usepackage[explicit]{titlesec}
+\usepackage{fontawesome5}
+\usepackage{tabularx}
+
+% --- CORES ---
+\definecolor{primarycolor}{HTML}{2c5d8a} % Azul profissional
+\definecolor{graytext}{HTML}{2D2D2D}      % Cinza escuro para texto
+
+% --- ESPAÇAMENTO E LAYOUT ---
+\setlength{\parindent}{0pt}
+\setlist[itemize]{topsep=3pt, parsep=0pt, partopsep=0pt, leftmargin=1.5em}
+\renewcommand{\arraystretch}{1.1}
+
+% --- CUSTOMIZAÇÃO DAS SEÇÕES (MÉTODO ALTERNATIVO E ROBUSTO) ---
+% Trocamos \titlerule* por um comando TeX mais primitivo (\leaders\hrule)
+% que é menos propenso a falhas por caracteres ocultos.
+\titleformat{\section}
+  {\color{primarycolor}\large\bfseries}
+  {}
+  {0em}
+  {\MakeUppercase{#1}\hspace{1em}{\color{primarycolor}\leaders\hrule height 0.5pt\hfill}}
+\titlespacing*{\section}{0pt}{1.2\baselineskip}{0.8\baselineskip}
+
+\begin{document}
+\pagestyle{empty}
+  % --- CABEÇALHO ---
+  \begin{center}
+    {\Huge \bfseries \color{primarycolor} Jonatas Kalebe Machado}\\[0.3\baselineskip]
+    {\large \color{graytext} Mid-Level Full Stack Developer}
+  \end{center}
+
+  \vspace{0.4\baselineskip}
+
+  \begin{center}
+    \small \color{graytext}
+    \begin{tabular}{c@{\hspace{2em}}c@{\hspace{2em}}c@{\hspace{2em}}c}
+        \faMapMarkerAlt\ Goiânia, GO, Brazil &
+        \faPhone\ +55 (62) 99344-2104 &
+        \href{mailto:jonataskalebe900@gmail.com}{\faEnvelope\ jonataskalebe900@gmail.com} &
+        \href{https://www.linkedin.com/in/jonataskalebe/}{\faLinkedin\ linkedin.com/in/jonataskalebe}
+    \end{tabular}
+  \end{center}
+
+  % --- SEÇÕES ---
+  \section{Summary}
+  A Mid-Level Developer specializing in Java, Angular and Flutter, with end-to-end experience building mission-critical systems for the public sector. Proficient across backend, frontend, and mobile development, with expertise in integrating distributed architectures, REST APIs, and security solutions. Played a leading role in projects that significantly reduced queues, automated core processes, and modernized large-scale services. Skilled in AWS cloud environments, focusing on high performance, scalability, and complex system integrations.
+
+  \section{Skills}
+  \begin{tabularx}{\textwidth}{@{} >{\bfseries \color{graytext}}l X @{}}
+    Languages \& Frameworks: & Java (8+), Spring Boot, J2EE, Angular, Flutter, TypeScript, SQL \\
+    Architecture: & Microservices, REST APIs, Clean Code, SOLID, Design Patterns \\
+    Cloud \& Infra: & AWS (EC2, S3, SQS), Docker, Kubernetes, Redis \\
+    Messaging: & Kafka, RabbitMQ \\
+    Databases: & PostgreSQL, DB2, NoSQL (conceptual knowledge) \\
+    Tools \& Testing: & Git, Maven, JUnit, Mockito
+  \end{tabularx}
+
+  \section{Professional Experience}
+
+  \textbf{\large Detran Goiás} -- Mid-Level Software Developer \hfill \color{graytext} Feb 2024 -- Present \\
+  \textit{\small Goiânia, Goiás, Brazil}
+  \begin{itemize}
+    \item \textbf{Online Legislation Exam (ELO):} As the lead developer, I architected and built the complete system, from the \textbf{backend (Java/Spring Boot)} to the \textbf{frontend (Angular)}. The platform eliminated queues by providing instant grading and automated result delivery for theoretical exams. I developed real-time monitoring via \textbf{WebRTC}, session synchronization across multiple instances using \textbf{Redis}, and fail-safe security flows, establishing the system as a mission-critical component of the driver's licensing process, now handling over 200 exams daily and expanding internationally.
+    \item \textbf{Third-Party Management System (SGC):} Engineered critical modules for contract and billing management, and developed \textbf{automated jobs for payment verification and certificate issuance}. I also implemented security APIs and audit routines. The project was built with \textbf{Java + Angular}, featuring robust business rules designed for large-scale operations.
+    \item \textbf{Practical Driving Test System:} Contributed to both the \textbf{Java} backend and the development of the \textbf{Flutter} application used by examiners. I created APIs for real-time communication, implemented multi-device synchronization, and optimized the results consolidation workflow to ensure high reliability and scalability for the system.
+  \end{itemize}
+  \textbf{\color{primarycolor}\faTools\ Technologies:} Java, Spring Boot, Angular, Flutter, Redis, WebRTC, PostgreSQL, AWS, Docker, Git.
+
+  \vspace{2em}
+
+  \textbf{\large BM Solution} -- Java Developer \hfill \color{graytext} Feb 2022 -- Feb 2024 \\
+  \textit{\small Suzano, São Paulo, Brazil}
+  \begin{itemize}
+    \item \textbf{Sales and CRM Modules Evolution:} Owned the end-to-end evolution of the ERP's Sales modules, from feature conception with business stakeholders to implementation and ongoing support. I developed new routines in \textbf{Java/J2EE} for \textbf{sales orders}, \textbf{quotes}, and \textbf{inbound/outbound document management}, applying \textbf{design patterns} to improve the quality and maintainability of legacy code.
+    \item \textbf{Invoicing Module (NFe) Re-architecture:} Served as the core developer for the complete re-architecture of the \textbf{Electronic Invoice (NFe)} module. I designed and implemented the \textbf{Java} services for communication with government tax APIs (SEFAZ), orchestrating the data flow with \textbf{EJB} components. The new architecture significantly improved the resilience and stability of client fiscal operations, a critical business process.
+  \end{itemize}
+  \textbf{\color{primarycolor}\faTools\ Technologies:} Java, J2EE, EJB, Struts, SQL, DB2, PostgreSQL, Maven, Git, Agile.
+
+  \section{Education}
+  \textbf{Bachelor of Science in Computer Science} (in progress) \hfill \color{graytext} 2023 -- 2027 \\
+  \textit{Federal University of Goiás (UFG) -- Goiânia, GO}
+
+  \section{Languages}
+  \textbf{English:} Advanced  \quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad \textbf{French:} Intermediate
+
+\end{document}

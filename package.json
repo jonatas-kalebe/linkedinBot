@@ -1,26 +1,20 @@
 {
-  "name": "scripts",
+  "name": "linkedin-cv-generator",
   "version": "1.0.0",
-  "description": "",
-  "main": "./scripts/apply.ts",
+  "description": "Bot para encontrar vagas e gerar CVs personalizados com IA",
+  "main": "src/index.ts",
   "scripts": {
-    "start": "ts-node ./scripts/apply.ts",
-    "apply": "ts-node ./scripts/apply.ts SUBMIT"
+    "start": "ts-node src/index.ts"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
-    "cross-spawn": "^7.0.6",
-    "dotenv": "^17.2.1",
-    "franc": "^6.2.0",
-    "iso-639-3": "^3.0.1",
-    "languagedetect": "^2.0.0",
-    "puppeteer": "^19.7.1",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.0.2"
+    "@google/generative-ai": "^0.15.0",
+    "cross-spawn": "^7.0.3",
+    "dotenv": "^16.4.5",
+    "puppeteer": "^22.13.0"
   },
   "devDependencies": {
-    "@types/cross-spawn": "^6.0.6"
+    "@types/cross-spawn": "^6.0.6",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3"
   }
 }

@@ -22,7 +22,8 @@ async function login({ page, email, password }: Params): Promise<void> {
 
     // @ts-ignore
     const isOnLoginPage = await loginFormOrFeed.evaluate(
-      (el, selector) => el.matches(selector),
+      // ### CORREÇÃO 1 AQUI: Adicionado (el as Element) ###
+      (el, selector) => (el as Element).matches(selector),
       selectors.emailInput
     );
 
@@ -47,8 +48,11 @@ async function login({ page, email, password }: Params): Promise<void> {
     const elementHandle = finalPage.asElement();
     if (!elementHandle) throw new Error('Não foi possível obter o handle do elemento pós-login.');
 
-    const is2FA = await elementHandle.evaluate((el, selector) => el.matches(selector), selectors.challengePinInput);
-    const isCaptcha = await elementHandle.evaluate((el, selector) => el.matches(selector), selectors.captcha);
+    // ### CORREÇÃO 2 AQUI: Adicionado (el as Element) ###
+    const is2FA = await elementHandle.evaluate((el, selector) => (el as Element).matches(selector), selectors.challengePinInput);
+
+    // ### CORREÇÃO 3 AQUI: Adicionado (el as Element) ###
+    const isCaptcha = await elementHandle.evaluate((el, selector) => (el as Element).matches(selector), selectors.captcha);
 
     if (is2FA) {
       await ask('Verificação de 2 etapas detectada. Por favor, insira o código no navegador e pressione Enter aqui para continuar...');
