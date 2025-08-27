@@ -51,10 +51,9 @@ export async function analyzeJobFit(
 
     **CRITÉRIOS DE AVALIAÇÃO:**
     1.  **Idioma:** Primeiro, determine o idioma da vaga. Se não estiver na lista de 'IDIOMAS PERMITIDOS', a nota é 0 e 'isFit' é false.
-    2.  **Senioridade:** O candidato tem 4 anos de experiência. Vagas que pedem 3-5 anos são ideais (nota 8-10). Vagas que pedem 1-2 anos são júnior demais (nota 3-5). Vagas que pedem 6+ anos são sênior demais (nota 2-4). Vagas que não especificam são neutras (nota 6-7).
-    3.  **Tecnologias Essenciais:** O perfil do candidato é forte em Java, Spring Boot, SQL e APIs RESTful. A vaga DEVE listar estas como requisitos principais para uma nota alta.
-    4.  **Tecnologias Secundárias:** O perfil menciona Docker, AWS, Kubernetes. A presença destes na vaga aumenta a nota.
-    5.  **Alinhamento de Função:** O candidato busca vagas de backend. Vagas "Full-Stack" com foco em backend são aceitáveis, mas vagas com foco em frontend devem ter nota baixa.
+    2.  **Senioridade:** O candidato tem 4 anos de experiência. Vagas que pedem 3-5 anos são ideais (nota 8-10). Vagas que pedem 1-2 anos são júnior demais (nota 5-6). Vagas que pedem 6+ anos são sênior demais (nota 2-4). Vagas que não especificam são neutras (nota 6-7).
+    3.  **Tecnologias Essenciais:** O perfil do candidato é forte em Java, Angular , Spring Boot, SQL e APIs RESTful. A vaga DEVE listar estas como requisitos principais para uma nota alta.
+    4.  **Alinhamento de Função:** O candidato busca vagas de backend, Frontend e Vagas "Full-Stack".
 
     **FORMATO DA SAÍDA:**
     Retorne um objeto JSON com o formato: {"fit": boolean, "fitScore": number (0-10), "language": "idioma_detectado", "reason": "Justificativa curta para a nota"}
