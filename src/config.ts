@@ -4,7 +4,7 @@ export default {
 
   // Caminho para o seu arquivo .txt que contém o código LaTeX base do seu currículo.
   CV_LATEX_TEMPLATE_PATH: "C:\\Users\\jonat\\OneDrive\\Área de Trabalho\\linkedin-easy-apply-bot-main\\ResumeLatex.txt",
-  SEARCH_INTERVAL_MINUTES: 2,
+  SEARCH_INTERVAL_MINUTES: 10,
   KEYWORDS: "Software Engineer Java Spring Boot Angular",
   LOCATION: "Worldwide",
   JOB_DESCRIPTION_LANGUAGES: ["portuguese", "english"],
@@ -17,5 +17,6 @@ export default {
     - Experiência sólida com bancos de dados SQL (PostgreSQL) e Docker.
     - Proficiente em Inglês.
     - Objetivo: Conseguir uma vaga de desenvolvedor Fullstack no exterior com uma moeda que valha muitos reais , Sendo apenas em trabalho remoto se n'ao for remoto a nota fit é 0 se não permitir brasil trabalhar também é 0.
+    - Se a vaga nao fala se permite ou nao remoto do brasil nao de nota 0 mas reduza os pontos de acordo com a probabilidade que voce julgar dessa empresa permitir trabalhar do brasil remotamente. Mas se falar que é apenas no pais x que nao for brazil pode dar 0 independente dos outros matches
   `
 };
