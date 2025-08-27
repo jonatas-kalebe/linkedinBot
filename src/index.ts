@@ -9,8 +9,33 @@ import { isPerfectFit } from './analysis';
 import { generateLatexCV } from './services/geminiService';
 import { compileLatexToPdf } from './compiler';
 
+const processedJobsPath = path.join(__dirname, '../processed_jobs.json');
+let processedJobUrls: Set<string>;
+
+function loadProcessedJobs(): Set<string> {
+    try {
+        if (fs.existsSync(processedJobsPath)) {
+            const fileContent = fs.readFileSync(processedJobsPath, 'utf-8');
+            return new Set(JSON.parse(fileContent));
+        }
+    } catch (error) {
+        console.warn('Aviso: Não foi possível ler o ficheiro de vagas processadas. Começando do zero.', error);
+    }
+    return new Set();
+}
+
+function saveProcessedJob(url: string): void {
+    processedJobUrls.add(url);
+    fs.writeFileSync(processedJobsPath, JSON.stringify(Array.from(processedJobUrls), null, 2));
+}
+
+const wait = (ms: number) => new Promise(res => setTimeout(res, ms));
+
 (async () => {
     console.log('🚀 Iniciando o Bot Gerador de Currículos...');
+
+    processedJobUrls = loadProcessedJobs();
+    console.log(`📚 Encontradas ${processedJobUrls.size} vagas já processadas anteriormente.`);
 
     const browser = await puppeteer.launch({
         headless: false,
@@ -28,6 +53,7 @@ import { compileLatexToPdf } from './compiler';
         console.log('✅ Sessão de login detectada.');
     }
 
+    // --- 2. CARREGAR TEMPLATE DE CURRÍCULO ---
     let latexTemplate = '';
     try {
         const templatePath = path.resolve(__dirname, '../', config.CV_LATEX_TEMPLATE_PATH);
@@ -39,50 +65,55 @@ import { compileLatexToPdf } from './compiler';
         return;
     }
 
+    // --- 3. CRIAR PASTA DE SAÍDA ---
     const outputDir = path.join(__dirname, '../generated_cvs');
     if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir);
     }
-    console.log(`📄 Arquivos serão salvos em: ${outputDir}`);
+    console.log(`📂 Arquivos serão salvos em: ${outputDir}`);
 
+    // --- 4. FLUXO PRINCIPAL DE BUSCA, ANÁLISE E GERAÇÃO ---
     const jobDataGenerator = fetchJobData(page, config.KEYWORDS, config.LOCATION);
     let perfectFitCount = 0;
+    let seenJobsCount = 0;
 
     console.log('\n--- Iniciando busca por vagas... ---');
     for await (const jobData of jobDataGenerator) {
-        console.log(`\n--- Processando vaga: ${jobData.title} @ ${jobData.company} ---`);
 
-        const analysisResult = await isPerfectFit(jobData);
+        // ### VERIFICAÇÃO DE VAGA JÁ VISTA ###
+        if (processedJobUrls.has(jobData.url)) {
+            seenJobsCount++;
+            continue; // Pula para a próxima vaga sem imprimir nada
+        }
 
-        // Apenas continua se a IA marcou como 'isFit: true'
-        if (analysisResult.fit) {
+        console.log(`\n--- Processando nova vaga: ${jobData.title} @ ${jobData.company} ---`);
+
+        const { fit, language, fitScore, reason } = await isPerfectFit(jobData);
+
+        // Marca a vaga como processada, independentemente do resultado do fit
+        saveProcessedJob(jobData.url);
+
+        if (fit) {
             perfectFitCount++;
             console.log(`✨ Vaga Perfeita #${perfectFitCount} encontrada! Gerando currículo...`);
 
             try {
-                // ### NOVA LÓGICA DE PASTAS E ARQUIVOS ###
-
-                // 1. Sanitiza os nomes para criar um nome de pasta válido
+                // Cria a subpasta com a nota de fit
                 const safeCompanyName = jobData.company.replace(/[^a-z0-9]/gi, '_').toLowerCase();
                 const safeJobTitle = jobData.title.replace(/[^a-z0-9]/gi, '_').toLowerCase().substring(0, 30);
-
-                // 2. Cria o nome da subpasta com a nota de fit
-                const subfolderName = `${analysisResult.fitScore} - ${safeCompanyName} - ${safeJobTitle}`;
+                const subfolderName = `${fitScore} - ${safeCompanyName} - ${safeJobTitle}`;
                 const subfolderPath = path.join(outputDir, subfolderName);
                 if (!fs.existsSync(subfolderPath)) {
                     fs.mkdirSync(subfolderPath, { recursive: true });
                 }
 
-                // 3. Define os caminhos para o PDF e o TXT dentro da nova subpasta
                 const pdfPath = path.join(subfolderPath, 'Jonatas_CV.pdf');
                 const txtPath = path.join(subfolderPath, 'link_da_vaga.txt');
 
-                // 4. Gera e compila o currículo
-                const personalizedLatex = await generateLatexCV(jobData.description, config.AI_USER_PROFILE, latexTemplate, analysisResult.language);
+                const personalizedLatex = await generateLatexCV(jobData.description, config.AI_USER_PROFILE, latexTemplate, language);
                 await compileLatexToPdf(personalizedLatex, pdfPath);
 
-                // 5. Salva o TXT com o link e a justificativa da IA
-                const txtContent = `Vaga: ${jobData.title} @ ${jobData.company}\nURL: ${jobData.url}\n\nNota de Fit: ${analysisResult.fitScore}/10\nJustificativa: ${analysisResult.reason}`;
+                const txtContent = `Vaga: ${jobData.title} @ ${jobData.company}\nURL: ${jobData.url}\n\nNota de Fit: ${fitScore}/10\nJustificativa: ${reason}`;
                 fs.writeFileSync(txtPath, txtContent);
 
                 console.log(`✅ Currículo e link salvos em: ${subfolderPath}`);
@@ -93,6 +124,10 @@ import { compileLatexToPdf } from './compiler';
         }
     }
 
-    console.log(`\n🏁 Processo finalizado. Total de vagas perfeitas encontradas: ${perfectFitCount}.`);
+    if (seenJobsCount > 0) {
+        console.log(`\n(Foram ignoradas ${seenJobsCount} vagas que já haviam sido analisadas em execuções anteriores.)`);
+    }
+
+    console.log(`\n🏁 Processo finalizado. Total de vagas perfeitas encontradas nesta execução: ${perfectFitCount}.`);
     await browser.close();
 })();
