@@ -38,20 +38,27 @@ async function generateContentWithFallback(prompt: string): Promise<string> {
 }
 
 // ### FUNÇÃO DE ANÁLISE REESCRITA E MAIS INTELIGENTE ###
-export async function analyzeJobFit(jobDescription: string, userProfile: string, allowedLanguages: string[]): Promise<{ isFit: boolean; language: string; reason: string }> {
+// ... (imports e a função generateContentWithFallback permanecem os mesmos) ...
+
+// ### FUNÇÃO DE ANÁLISE REESCRITA PARA RETORNAR UMA NOTA DE FIT ###
+export async function analyzeJobFit(
+  jobDescription: string,
+  userProfile: string,
+  allowedLanguages: string[]
+): Promise<{ fit: boolean; fitScore: number; language: string; reason: string }> {
   const prompt = `
-    **TAREFA:** Você é um recrutador sênior. Analise a vaga e o perfil do usuário e retorne um objeto JSON.
+    **TAREFA:** Você é um recrutador técnico sênior. Sua tarefa é analisar a vaga de emprego e o perfil do candidato para determinar uma "nota de fit" de 0 a 10 e se o candidato deve prosseguir.
 
-    **PASSOS:**
-    1. Determine o idioma principal da 'DESCRIÇÃO DA VAGA'.
-    2. Verifique se o idioma detectado está na lista de 'IDIOMAS PERMITIDOS'. Se não estiver, o 'isFit' é false.
-    3. Analise se as tecnologias, nível de experiência e tipo de trabalho da vaga são compatíveis com o 'PERFIL DO USUÁRIO'.
-    4. Retorne um objeto JSON com o formato: {"isFit": boolean, "language": "idioma_detectado", "reason": "motivo_da_decisão"}
+    **CRITÉRIOS DE AVALIAÇÃO:**
+    1.  **Idioma:** Primeiro, determine o idioma da vaga. Se não estiver na lista de 'IDIOMAS PERMITIDOS', a nota é 0 e 'isFit' é false.
+    2.  **Senioridade:** O candidato tem 4 anos de experiência. Vagas que pedem 3-5 anos são ideais (nota 8-10). Vagas que pedem 1-2 anos são júnior demais (nota 3-5). Vagas que pedem 6+ anos são sênior demais (nota 2-4). Vagas que não especificam são neutras (nota 6-7).
+    3.  **Tecnologias Essenciais:** O perfil do candidato é forte em Java, Spring Boot, SQL e APIs RESTful. A vaga DEVE listar estas como requisitos principais para uma nota alta.
+    4.  **Tecnologias Secundárias:** O perfil menciona Docker, AWS, Kubernetes. A presença destes na vaga aumenta a nota.
+    5.  **Alinhamento de Função:** O candidato busca vagas de backend. Vagas "Full-Stack" com foco em backend são aceitáveis, mas vagas com foco em frontend devem ter nota baixa.
 
-    **EXEMPLOS DE SAÍDA:**
-    - {"isFit": true, "language": "portuguese", "reason": "Compatível com Java, Sênior e remoto."}
-    - {"isFit": false, "language": "german", "reason": "Idioma não permitido."}
-    - {"isFit": false, "language": "english", "reason": "A vaga exige 10 anos de experiência, o perfil tem 4."}
+    **FORMATO DA SAÍDA:**
+    Retorne um objeto JSON com o formato: {"fit": boolean, "fitScore": number (0-10), "language": "idioma_detectado", "reason": "Justificativa curta para a nota"}
+    - 'fit' deve ser 'true' apenas se a nota for 5 ou maior.
 
     ---
     **IDIOMAS PERMITIDOS:**
@@ -73,15 +80,25 @@ export async function analyzeJobFit(jobDescription: string, userProfile: string,
     return result;
   } catch (error) {
     console.error("Erro ao processar resposta da IA. Retornando 'não fit'.", error);
-    return { isFit: false, language: 'unknown', reason: 'Erro de análise da IA.' };
+    return { fit: false, fitScore: 0, language: 'unknown', reason: 'Erro de análise da IA.' };
 }
 }
 
 export async function generateLatexCV(jobDescription: string, userProfile: string, latexTemplate: string, jobLanguage: string): Promise<string> {
   const prompt = `
-    **TAREFA:** Você é um especialista em LaTeX e recrutamento. Adapte o template de currículo em LaTeX fornecido para que ele seja perfeito para a descrição da vaga.
-    **INSTRUÇÕES:** Mantenha a estrutura geral. Adapte o resumo profissional para conectar as habilidades do usuário com os requisitos da vaga. Priorize as habilidades mencionadas na vaga. Adapte o texto para o idioma da vaga: '${jobLanguage}'.
-    **SAÍDA:** Retorne APENAS o código LaTeX completo e válido. Não inclua explicações, comentários ou a tag \`\`\`latex.
+    **TAREFA:** Você é um compilador LaTeX. Sua única função é adaptar o template LaTeX fornecido para uma vaga de emprego específica.
+
+    **REGRAS CRÍTICAS DE SAÍDA (NÃO QUEBRE ESTAS REGRAS SOB NENHUMA CIRCUNSTÂNCIA):**
+    1.  **SEM MARKDOWN:** A sua resposta DEVE ser APENAS o código LaTeX puro. NÃO inclua \`\`\`latex no início ou \`\`\` no final. A resposta deve começar diretamente com a primeira linha de código LaTeX do template, como \\documentclass{...}.
+    2.  **ESCAPE DE CARACTERES ESPECIAIS:** Você DEVE escapar todos os caracteres especiais do LaTeX que aparecerem em texto normal. Os caracteres são: # $ % & _ { } ~ ^ \\. Exemplo: "R&D" deve ser escrito como "R\\&D". Verifique o texto da vaga e do perfil com atenção.
+    3.  **PACOTES ESSENCIAIS:** O preâmbulo do documento DEVE conter '\\usepackage[utf8]{inputenc}' e '\\usepackage{fontawesome5}'. Verifique se eles estão presentes.
+
+    **INSTRUÇÕES DE CONTEÚDO:**
+    - Mantenha a estrutura geral do template.
+    - Adapte o resumo profissional para conectar as habilidades do usuário com os requisitos da vaga.
+    - Priorize as habilidades mencionadas na vaga na seção de competências.
+    - Adapte todo o texto para o idioma da vaga: '${jobLanguage}'.
+
     ---
     **PERFIL DO USUÁRIO:**
     ${userProfile}
@@ -92,7 +109,9 @@ export async function generateLatexCV(jobDescription: string, userProfile: strin
     **DESCRIÇÃO DA VAGA:**
     ${jobDescription}
     ---
-    **CÓDIGO LATEX GERADO:**
+    **CÓDIGO LATEX GERADO (COMECE DIRETAMENTE COM A PRIMEIRA LINHA DE CÓDIGO):**
   `;
-  return await generateContentWithFallback(prompt);
+    // Adiciona uma etapa de limpeza final para remover qualquer markdown que a IA possa adicionar por teimosia
+    const rawLatex = await generateContentWithFallback(prompt);
+    return rawLatex.replace(/```latex/g, '').replace(/```/g, '').trim();
 }
