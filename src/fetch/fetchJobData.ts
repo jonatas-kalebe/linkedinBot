@@ -1,5 +1,6 @@
 import {ElementHandle, Page} from 'puppeteer';
 import selectors from '../selectors';
+import {humanizedWait} from "../utils/humanization";
 
 export interface JobData {
     url: string;
@@ -8,7 +9,8 @@ export interface JobData {
     description: string;
 }
 
-const wait = (ms: number) => new Promise(res => setTimeout(res, ms));
+// MELHORIA: Função de espera com tempo aleatório para simular comportamento humano.
+const randomWait = (min: number, max: number) => new Promise(res => setTimeout(res, Math.random() * (max - min) + min));
 
 /**
  * Normaliza uma URL do LinkedIn para a sua forma base, removendo parâmetros de rastreamento.
@@ -17,16 +19,14 @@ const wait = (ms: number) => new Promise(res => setTimeout(res, ms));
  */
 function normalizeUrl(url: string): string {
     try {
-    const urlObject = new URL(url);
-    // Mantém apenas o caminho base (ex: /jobs/view/12345/) e remove a busca (query params).
-    return `${urlObject.origin}${urlObject.pathname}`;
+        const urlObject = new URL(url);
+        return `${urlObject.origin}${urlObject.pathname}`;
     } catch (error) {
         console.warn(`URL inválida encontrada: ${url}`);
         return url;
     }
 }
 
-// ### CORREÇÃO PRINCIPAL: A função agora recebe as URLs já processadas ###
 export async function* fetchJobData(
     page: Page,
     keywords: string,
@@ -36,15 +36,18 @@ export async function* fetchJobData(
     const searchUrl = new URL('https://www.linkedin.com/jobs/search/');
     searchUrl.searchParams.set('keywords', keywords);
     searchUrl.searchParams.set('location', location);
-    searchUrl.searchParams.set('f_WT', '2');
+    searchUrl.searchParams.set('f_WT', '2'); // Filtro para Vagas Remotas
 
-    console.log(`Buscando VAGAS REMOTAS em: ${searchUrl.toString()}`);
-    await page.goto(searchUrl.toString(), { waitUntil: 'load' });
-    await wait(2000);
+    // MELHORIA 1: Ordenar por mais recentes (últimas 24h e por data).
+    searchUrl.searchParams.set('sortBy', 'DD'); // DD = "Date Descending" (Mais recentes primeiro)
 
-    let numTotalJobs = 25;
+    console.log(`Buscando VAGAS MAIS RECENTES em: ${searchUrl.toString()}`);
+    await page.goto(searchUrl.toString(),  { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await humanizedWait(page, 3000, 5000);
+
+    let numTotalJobs = 10;
     try {
-        const numJobsHandle = await page.waitForSelector(selectors.searchResultListText, {timeout: 5000});
+        const numJobsHandle = await page.waitForSelector(selectors.searchResultListText, {timeout: 7000});
         const availableJobsText = await (numJobsHandle as ElementHandle<HTMLElement>).evaluate((el) => el.innerText);
         numTotalJobs = parseInt(availableJobsText.replace(/\D/g, ''));
     } catch (e) {
@@ -54,19 +57,30 @@ export async function* fetchJobData(
     console.log(`Total de vagas encontradas na busca: ${numTotalJobs}`);
     let processedJobsInThisRun = 0;
     let currentPageNum = 1;
+    const maxJobsToProcess = 50; // Limite de segurança para não processar indefinidamente.
 
-    // ### LÓGICA DE PAGINAÇÃO COMPLETA ###
-    while (processedJobsInThisRun < numTotalJobs) {
+    // NOVA LÓGICA: Contador para páginas consecutivas sem vagas novas.
+    let consecutiveEmptyPages = 0;
+
+    while (processedJobsInThisRun < maxJobsToProcess) {
         searchUrl.searchParams.set('start', String(processedJobsInThisRun));
 
         if (processedJobsInThisRun > 0) {
             console.log(`\n--- Navegando para a página ${currentPageNum} de resultados... ---`);
-            await page.goto(searchUrl.toString(), { waitUntil: 'load' });
-            await wait(2000);
+            await page.goto(searchUrl.toString(),  { waitUntil: 'domcontentloaded', timeout: 60000 });
+            await humanizedWait(page, 3000, 6000);
         }
 
-        await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-        await wait(2000);
+        // MELHORIA: Simula uma rolagem mais humana na página.
+        console.log("   -> Rolando a página para carregar mais vagas...");
+        await page.evaluate(async () => {
+            const scrollHeight = document.body.scrollHeight;
+            for (let i = 0; i < scrollHeight; i += 100) {
+                window.scrollTo(0, i);
+                await new Promise(resolve => setTimeout(resolve, Math.random() * 20 + 10)); // Pequenas pausas durante a rolagem
+            }
+        });
+        await humanizedWait(page, 2000, 4000);
 
         const jobLinks = await page.$$eval(selectors.searchResultListItemLink, (links) =>
             links.map(a => (a as HTMLAnchorElement).href)
@@ -76,50 +90,61 @@ export async function* fetchJobData(
             console.log("Nenhum link novo encontrado nesta página. Finalizando o ciclo de busca.");
             break;
         }
-
         console.log(`Encontrados ${jobLinks.length} links na página ${currentPageNum}.`);
         processedJobsInThisRun += jobLinks.length;
         currentPageNum++;
 
-        // ### LÓGICA DE FILTRAGEM OTIMIZADA ###
-        // 1. Normaliza todos os links encontrados na página.
         const normalizedLinks = jobLinks.map(normalizeUrl);
-        // 2. Filtra para criar uma lista apenas com os links que NÃO ESTÃO na nossa memória.
         const newLinksToProcess = normalizedLinks.filter(link => !processedUrls.has(link));
 
         if (newLinksToProcess.length === 0) {
-            console.log("Todos os links nesta página já foram processados. Pulando para a próxima.");
-            continue; // Avança para a próxima página de resultados
+            console.log("Todos os links nesta página já foram processados.");
+
+            // NOVA LÓGICA: Incrementa o contador e verifica se o limite foi atingido.
+            consecutiveEmptyPages++;
+            console.log(`   -> Páginas consecutivas sem vagas novas: ${consecutiveEmptyPages}/2`);
+            if (consecutiveEmptyPages >= 2) {
+                console.log("   -> Limite atingido. Finalizando esta busca e passando para a próxima query.");
+                break; // Sai do laço 'while' e encerra a busca para esta palavra-chave.
         }
+
+            continue; // Pula para a próxima página de resultados
+        }
+
+        // NOVA LÓGICA: Se encontrarmos vagas novas, o contador é zerado.
+        consecutiveEmptyPages = 0;
 
         console.log(`Destes, ${newLinksToProcess.length} são novos. Começando a análise...`);
 
-        // ### NOVA LÓGICA DE TENTATIVAS AQUI ###
         for (const link of newLinksToProcess) {
-            const MAX_RETRIES = 3;
+            const MAX_RETRIES = 4;
             let success = false;
             for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-            try {
-                await page.goto(link, {waitUntil: 'load', timeout: 30000});
-                const title = await page.$eval(selectors.jobTitle, el => (el as HTMLElement).innerText.trim());
-                const company = await page.$eval(selectors.companyName, el => (el as HTMLElement).innerText.trim());
-                const description = await page.$eval(selectors.jobDescription, el => (el as HTMLElement).innerText);
+                try {
+                    await page.goto(link, {waitUntil: 'domcontentloaded', timeout: 60000});
+                    await humanizedWait(page, 2500, 4500);
 
-                yield { url: link, title, company, description };
-                    success = true; // Marca como sucesso para sair do loop de tentativas
+                    const title = await page.$eval(selectors.jobTitle, el => (el as HTMLElement).innerText.trim());
+                    const company = await page.$eval(selectors.companyName, el => (el as HTMLElement).innerText.trim());
+                    const description = await page.$eval(selectors.jobDescription, el => (el as HTMLElement).innerText);
+
+                    yield {url: link, title, company, description};
+                    success = true;
                     break;
 
-            } catch (error) {
-                    console.warn(`  - Tentativa ${attempt} de ${MAX_RETRIES} falhou ao processar a vaga em ${link}.`);
+                } catch (error) {
+                    console.warn(`   - Tentativa ${attempt} de ${MAX_RETRIES} falhou ao processar a vaga em ${link}.`);
                     if (attempt < MAX_RETRIES) {
-                        console.log("  - Atualizando a página e tentando novamente...");
-                        await page.reload({ waitUntil: 'load' });
-                        await wait(3000); // Espera um pouco após atualizar
+                        // MELHORIA: Exponential backoff + jitter para as tentativas
+                        const waitTime = Math.pow(2, attempt) * 1000 + Math.random() * 2000;
+                        console.log(`   - Atualizando a página e tentando novamente em ${Math.round(waitTime / 1000)}s...`);
+                        await page.reload( { waitUntil: 'domcontentloaded', timeout: 60000 });
+                        await humanizedWait(page, waitTime, waitTime + 1000);
                     }
                 }
             }
             if (!success) {
-                 console.error(`  - ❌ Falha final ao processar a vaga em ${link} após ${MAX_RETRIES} tentativas. Pulando.`);
+                console.error(`   - ❌ Falha final ao processar a vaga em ${link} após ${MAX_RETRIES} tentativas. Pulando.`);
             }
         }
     }

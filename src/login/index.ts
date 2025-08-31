@@ -66,7 +66,7 @@ async function login({ page, email, password }: Params): Promise<void> {
     console.log('Não foi possível confirmar o login ou detectar verificação. Verifique a tela.');
     await page.screenshot({ path: 'erro_login.png' });
     console.log('Screenshot `erro_login.png` salvo.');
-    await ask('Pressione Enter para tentar continuar...');
+    // await ask('Pressione Enter para tentar continuar...');
   }
 
   await page.click(selectors.skipButton).catch(() => {
