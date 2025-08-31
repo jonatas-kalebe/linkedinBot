@@ -2,14 +2,10 @@ export default {
   LINKEDIN_EMAIL: "seu_email@aqui.com",
   LINKEDIN_PASSWORD: "sua_senha_aqui",
 
-  // Caminho para o seu arquivo .txt que contém o código LaTeX base do seu currículo.
-  CV_LATEX_TEMPLATE_PATH: "C:\\Users\\jonat\\OneDrive\\Área de Trabalho\\linkedin-easy-apply-bot-main\\ResumeLatex.txt",
+    CV_LATEX_TEMPLATE_PATH: "C:\\Users\\jonat\\OneDrive\\Área de Trabalho\\linkedin-easy-apply-bot-main\\ResumeLatex.txt",
 
-  // ### MODIFICAÇÃO 1: Múltiplas buscas ###
-  // Em vez de uma única string, agora temos um array. O bot executará uma busca para cada item.
-  SEARCH_QUERIES: [
-        // --- Buscas Gerais e Amplas (Foco em Título e Remoto) ---
-        "Java Developer Remote",
+      SEARCH_QUERIES: [
+                "Java Developer Remote",
 
         "Spring Boot Developer Remote",
         "Angular Developer Remote International",
@@ -22,11 +18,9 @@ export default {
         "Desenvolvedor Backend Java (PJ or Prestador de Serviços) Remoto"
   ],
 
-  // Localização padrão, a IA fará a filtragem fina
-  LOCATION: "Worldwide",
+    LOCATION: "Worldwide",
   JOB_DESCRIPTION_LANGUAGES: ["portuguese", "english"],
-  SEARCH_INTERVAL_MINUTES: 20, // Pausa de 15 minutos entre os ciclos de busca completos
-
+  SEARCH_INTERVAL_MINUTES: 20,
 
     AI_USER_PROFILE: `
   ### CONTEXTO DO PROFISSIONAL ###

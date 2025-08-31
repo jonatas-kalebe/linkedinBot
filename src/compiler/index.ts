@@ -30,8 +30,7 @@ export async function compileLatexToPdf(latexCode: string, outputFilePath: strin
     });
 
     pdflatex.on('close', (code) => {
-      // Limpa os arquivos auxiliares após a tentativa
-      try {
+            try {
         fs.unlinkSync(tempTexFile);
         const logFile = path.join(outputDir, `${jobName}.log`);
         if (fs.existsSync(logFile)) fs.unlinkSync(logFile);
@@ -39,19 +38,14 @@ export async function compileLatexToPdf(latexCode: string, outputFilePath: strin
         if (fs.existsSync(auxFile)) fs.unlinkSync(auxFile);
       } catch (e) {}
 
-      // ### LÓGICA DE VERIFICAÇÃO DEFINITIVA ###
-      // A única coisa que importa é se o arquivo PDF foi criado.
-      if (fs.existsSync(outputFilePath)) {
+                  if (fs.existsSync(outputFilePath)) {
         if (code !== 0) {
-          // Se o código não for 0, significa que houve avisos ou erros não fatais.
-          console.warn(`  - ⚠️  PDF compilado com sucesso, mas com avisos. Verifique o documento gerado.`);
+                    console.warn(`  - ⚠️  PDF compilado com sucesso, mas com avisos. Verifique o documento gerado.`);
         } else {
           console.log('  - ✅ PDF compilado com sucesso!');
         }
-        resolve(); // SUCESSO!
-      } else {
-        // Se o PDF não existe, então foi uma falha catastrófica.
-        console.error('  - ❌ Erro de compilação do LaTeX detectado (nenhum PDF gerado).');
+        resolve();       } else {
+                console.error('  - ❌ Erro de compilação do LaTeX detectado (nenhum PDF gerado).');
         console.error('--- INÍCIO DO LOG DE ERRO LATEX ---');
         console.error(stdoutLog);
         console.error('--- FIM DO LOG DE ERRO LATEX ---');

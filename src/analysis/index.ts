@@ -1,19 +1,14 @@
-import { Page } from 'puppeteer';
-import selectors from '../selectors';
 import config from '../config';
-import { analyzeJobFit } from '../services/geminiService';
-import { JobData } from '../fetch/fetchJobData'; // Importa a interface correta
+import {analyzeJobFit} from '../services/geminiService';
+import {JobData} from "../core/jobProcessor";
 
-// A função agora retorna o objeto completo da análise
 export async function isPerfectFit(jobData: JobData): Promise<{ fit: boolean; fitScore: number; language: string; reason: string; }> {
     try {
         console.log(`  - Analisando fit da vaga "${jobData.title}" com a IA...`);
 
-        // A IA agora fará a análise completa, incluindo o idioma.
-        const analysisResult = await analyzeJobFit(jobData.description, config.AI_USER_PROFILE, config.JOB_DESCRIPTION_LANGUAGES);
+                const analysisResult = await analyzeJobFit(jobData.description, config.AI_USER_PROFILE, config.JOB_DESCRIPTION_LANGUAGES);
 
-        // ### CORREÇÃO: Usa 'analysisResult.fit' em vez de 'isFit' ###
-        if (analysisResult.fit) {
+                if (analysisResult.fit) {
             console.log(`  - ✅ Fit Aprovado pela IA! (Nota: ${analysisResult.fitScore}/10, Idioma: ${analysisResult.language})`);
         } else {
             console.log(`  - ❌ Fit Reprovado pela IA. (Nota: ${analysisResult.fitScore}/10, Motivo: ${analysisResult.reason})`);
