@@ -16,6 +16,7 @@ const models = [
     'gemini-2.5-flash-lite'
 ];
 const proModelName = 'gemini-2.5-pro';
+const proModelNameLite = 'gemini-2.5-flash-lite';
 let currentModelIndex = 0;
 
 async function generateContentWithFallback(prompt: string): Promise<string> {
@@ -153,6 +154,27 @@ export async function generateWithRetry(prompt: string, retries = 3): Promise<st
       if (attempt === retries) {
         console.error(`❌ Todas as ${retries} tentativas falharam. Abortando a operação.`);
         throw new Error(`Falha ao gerar conteúdo com o modelo ${proModelName} após ${retries} tentativas.`);
+      }
+      // Espera um pouco antes de tentar novamente (backoff simples)
+      await new Promise(res => setTimeout(res, 1000 * attempt));
+    }
+  }
+  throw new Error('Não foi possível obter resposta do modelo da IA.');
+}
+
+export async function generateWithRetryLite(prompt: string, retries = 3): Promise<string> {
+  const model = genAI.getGenerativeModel({model: proModelNameLite});
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      console.log(`🧠 Consultando a IA com o modelo de ponta [${proModelNameLite}], Tentativa ${attempt}/${retries}...`);
+      const result = await model.generateContent(prompt);
+      return result.response.text();
+    } catch (error: any) {
+      console.warn(`⚠️ Tentativa ${attempt} falhou ao consultar o modelo proModelNameLite{proModelName}: ${error.message}`);
+      if (attempt === retries) {
+        console.error(`❌ Todas as ${retries} tentativas falharam. Abortando a operação.`);
+        throw new Error(`Falha ao gerar conteúdo com o modelo ${proModelNameLite} após ${retries} tentativas.`);
       }
       // Espera um pouco antes de tentar novamente (backoff simples)
       await new Promise(res => setTimeout(res, 1000 * attempt));

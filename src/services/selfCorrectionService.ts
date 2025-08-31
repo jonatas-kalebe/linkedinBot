@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import {Page} from 'puppeteer';
 import {generateWithRetry} from "./geminiService";
-import {cleanHtmlForAnalysis} from "../utils/htmlUtils";
+import {cleanHtmlForAnalysis, cleanHtmlForAnalysisCheerio} from "../utils/htmlUtils";
 
 
 interface CorrectionContext {
@@ -33,7 +33,8 @@ export async function attemptSelfCorrection(page: Page, context: CorrectionConte
         // << ALTERAÇÃO AQUI >>
         // Limpa o HTML antes de usá-lo no prompt
         console.log(`- Limpando HTML da página... Tamanho original: ${Math.round(rawPageHtml.length / 1024)}KB`);
-        const cleanedHtml = cleanHtmlForAnalysis(rawPageHtml);
+        const cleanedHtmlCheerio = cleanHtmlForAnalysisCheerio(rawPageHtml);
+        const cleanedHtml = cleanHtmlForAnalysis(cleanedHtmlCheerio);
         console.log(`- HTML limpo! Novo tamanho: ${Math.round(cleanedHtml.length / 1024)}KB`);
 
         const prompt = `

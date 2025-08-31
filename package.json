@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.15.0",
+    "cheerio": "^1.1.2",
     "dotenv": "^16.4.5",
     "ghost-cursor": "^1.4.1",
     "node-latex": "^3.1.0",
@@ -16,6 +17,7 @@
     "puppeteer-extra-plugin-stealth": "^2.11.2"
   },
   "devDependencies": {
+    "@types/cheerio": "^1.0.0",
     "@types/cross-spawn": "^6.0.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.3"

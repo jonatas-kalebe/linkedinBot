@@ -1,23 +1,23 @@
-
 import * as fs from 'fs';
 import * as path from 'path';
 import config from '../config';
 import {isPerfectFit} from '../analysis';
 import {generateLatexCV} from '../services/geminiService';
 import {compileLatexToPdf} from '../compiler';
-import {saveProcessedJob} from "./fileManager";
 
 export interface JobData {
     url: string;
     title: string;
     company: string;
     description: string;
+    source: string;
 }
 
-export async function processJob(jobData: JobData, latexTemplate: string, outputDir: string, processedUrls: Set<string>): Promise<boolean> {
-    console.log(`\n--- Processando nova vaga: ${jobData.title} @ ${jobData.company} ---`);
+// A função processJob agora não precisa mais se preocupar em salvar o log de processados.
+// O orquestrador fará isso.
+export async function processJob(jobData: JobData, latexTemplate: string, outputDir: string): Promise<boolean> {
+    console.log(`\n--- Processando nova vaga de [${jobData.source}]: ${jobData.title} ---`);
     const analysis = await isPerfectFit(jobData);
-    saveProcessedJob(jobData.url, processedUrls);
 
     if (!analysis.fit) {
         console.log(`-- ❌ Vaga não compatível (Nota: ${analysis.fitScore}). Motivo: ${analysis.reason}`);

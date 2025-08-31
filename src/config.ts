@@ -1,26 +1,34 @@
 export default {
-  LINKEDIN_EMAIL: "seu_email@aqui.com",
-  LINKEDIN_PASSWORD: "sua_senha_aqui",
+    LINKEDIN_EMAIL: "seu_email@aqui.com",
+    LINKEDIN_PASSWORD: "sua_senha_aqui",
 
     CV_LATEX_TEMPLATE_PATH: "C:\\Users\\jonat\\OneDrive\\Área de Trabalho\\linkedin-easy-apply-bot-main\\ResumeLatex.txt",
 
-      SEARCH_QUERIES: [
-                "Java Developer Remote",
+    LINKEDIN_SEARCH_QUERIES: ["Java Developer Remote",
 
-        "Spring Boot Developer Remote",
-        "Angular Developer Remote International",
-        "Fullstack Developer (Java Angular) Remote",
+        "Spring Boot Developer Remote", "Angular Developer Remote International", "Fullstack Developer (Java Angular) Remote",
 
-        "Java Developer Remote Europe",
-        "Fullstack Java Angular Developer Remote Canada",
-        "Desenvolvedor Java Remoto PJ",
-        "Engenheiro de Software Fullstack Contractor Brasil Java",
-        "Desenvolvedor Backend Java (PJ or Prestador de Serviços) Remoto"
-  ],
+        "Java Developer Remote Europe", "Fullstack Java Angular Developer Remote Canada", "Desenvolvedor Java Remoto PJ", "Engenheiro de Software Fullstack Contractor Brasil Java", "Desenvolvedor Backend Java (PJ or Prestador de Serviços) Remoto"],
+
+    WWR_SEARCH_QUERIES: [
+        "java",
+        "angular",
+        "full-stack",
+        "backend",
+        "frontend"
+    ],
+
+    REMOKEOK_SEARCH_QUERIES: [
+        "java",
+        "angular",
+        "fullstack",
+        "backend",
+        "software engineer"
+    ],
 
     LOCATION: "Worldwide",
-  JOB_DESCRIPTION_LANGUAGES: ["portuguese", "english"],
-  SEARCH_INTERVAL_MINUTES: 20,
+    JOB_DESCRIPTION_LANGUAGES: ["portuguese", "english"],
+    SEARCH_INTERVAL_MINUTES: 20,
 
     AI_USER_PROFILE: `
   ### CONTEXTO DO PROFISSIONAL ###
