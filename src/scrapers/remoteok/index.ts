@@ -1,5 +1,3 @@
-// src/scrapers/remoteok/index.ts
-
 import {Page} from 'puppeteer';
 import {Scraper} from '../scraper.interface';
 import {JobData} from '../../core/jobProcessor';

@@ -1,5 +1,3 @@
-// src/services/selfCorrectionService.ts
-
 import * as fs from 'fs';
 import * as path from 'path';
 import {Page} from 'puppeteer';
@@ -30,8 +28,6 @@ export async function attemptSelfCorrection(page: Page, context: CorrectionConte
         const selectorsFileContent = fs.readFileSync(context.selectorsFilePath, 'utf-8');
         const rawPageHtml = await page.content();
 
-        // << ALTERAÇÃO AQUI >>
-        // Limpa o HTML antes de usá-lo no prompt
         console.log(`- Limpando HTML da página... Tamanho original: ${Math.round(rawPageHtml.length / 1024)}KB`);
         const cleanedHtmlCheerio = cleanHtmlForAnalysisCheerio(rawPageHtml);
         const cleanedHtml = cleanHtmlForAnalysis(cleanedHtmlCheerio);
@@ -69,17 +65,12 @@ export async function attemptSelfCorrection(page: Page, context: CorrectionConte
         const match = rawCorrectedCode.match(codeBlockRegex);
 
         if (match && match[1]) {
-            // Se encontrou um bloco de código markdown, extrai apenas o conteúdo.
             correctedCode = match[1];
         } else {
-            // Se não encontrou um bloco, apenas remove as linhas com ``` como uma segurança extra.
             correctedCode = rawCorrectedCode
-                .replace(/^```(typescript|json)?\s*$/gm, '') // Remove a linha de abertura do bloco
-                .replace(/^```\s*$/gm, ''); // Remove a linha de fechamento do bloco
+                .replace(/^```(typescript|json)?\s*$/gm, '').replace(/^```\s*$/gm, '');
         }
-        correctedCode = correctedCode.trim(); // Remove espaços/linhas em branco no início e no fim.
-        // << FIM DA MELHORIA >>
-
+        correctedCode = correctedCode.trim();
 
         if (!correctedCode.startsWith('export default {')) {
             console.error('- ❌ A IA retornou uma resposta em formato inválido após a limpeza. Abortando correção.');

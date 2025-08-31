@@ -1,12 +1,9 @@
-// src/index.ts
-
 import * as fs from 'fs';
 import * as path from 'path';
 import config from './config';
 import {Browser, Page} from 'puppeteer';
 
 import {launchBrowser, takeScreenshotOnError} from './core/browserManager';
-// << ALTERAÇÃO >> saveProcessedJob será chamado aqui
 import {saveProcessedJob} from './core/fileManager';
 import {processJob} from './core/jobProcessor';
 import {humanizedWait} from "./utils/humanization";
@@ -15,6 +12,7 @@ import {Scraper} from './scrapers/scraper.interface';
 import {linkedinScraper} from './scrapers/linkedin';
 import {weWorkRemotelyScraper} from './scrapers/weworkremotely';
 import {remoteOkScraper} from './scrapers/remoteok';
+import {programathorScraper} from "./scrapers/programathor";
 
 async function main() {
     let browser: Browser | null = null;
@@ -25,11 +23,11 @@ async function main() {
     if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir);
 
     const scrapersToRun: Scraper[] = [
+        programathorScraper,
         weWorkRemotelyScraper,
         remoteOkScraper,
         linkedinScraper,
 
-        // Adicione os outros aqui quando estiverem atualizados
     ];
 
     let cycleCount = 0;
@@ -49,14 +47,11 @@ async function main() {
             page = browserSession.page;
 
             for (const scraper of scrapersToRun) {
-                // << ALTERAÇÃO >> A chamada ao 'run' está mais simples
                 const jobDataGenerator = scraper.run(page);
 
                 for await (const jobData of jobDataGenerator) {
                     await humanizedWait(page, 5000, 10000);
-                    // O processJob não precisa mais do set de URLs
                     await processJob(jobData, latexTemplate, outputDir);
-                    // O orquestrador agora salva o status da URL
                     saveProcessedJob(jobData.url, jobData.source);
                 }
             }

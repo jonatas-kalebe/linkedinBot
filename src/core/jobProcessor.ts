@@ -13,8 +13,6 @@ export interface JobData {
     source: string;
 }
 
-// A função processJob agora não precisa mais se preocupar em salvar o log de processados.
-// O orquestrador fará isso.
 export async function processJob(jobData: JobData, latexTemplate: string, outputDir: string): Promise<boolean> {
     console.log(`\n--- Processando nova vaga de [${jobData.source}]: ${jobData.title} ---`);
     const analysis = await isPerfectFit(jobData);

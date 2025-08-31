@@ -1,9 +1,6 @@
-// src/core/fileManager.ts
-
 import * as fs from 'fs';
 import * as path from 'path';
 
-// << ALTERAÇÃO 2: A função agora aceita um nome de site para criar arquivos dinâmicos >>
 function getProcessedJobsPath(siteName: string): string {
     const sanitizedSiteName = siteName.toLowerCase().replace(/[^a-z0-9]/gi, '_');
     return path.join(__dirname, `../../processed_${sanitizedSiteName}.json`);
@@ -32,7 +29,6 @@ export function loadProcessedJobs(siteName: string): Set<string> {
 
 export function saveProcessedJob(url: string, siteName: string): void {
     const filePath = getProcessedJobsPath(siteName);
-    // Carrega o set atual para adicionar a nova URL, em vez de sobrescrever
     const currentSet = loadProcessedJobs(siteName);
 
     const normalizedUrl = new URL(url).origin + new URL(url).pathname;

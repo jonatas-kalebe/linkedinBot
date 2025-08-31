@@ -1,5 +1,3 @@
-// src/services/dynamicExtractionService.ts
-
 import {generateWithRetryLite} from './geminiService';
 import {cleanHtmlForAnalysis, cleanHtmlForAnalysisCheerio} from '../utils/htmlUtils';
 import {JobData} from '../core/jobProcessor';
@@ -43,7 +41,6 @@ export async function extractJobDataWithAI(page: Page, jobUrl: string): Promise<
 
         const jsonResponse = await generateWithRetryLite(prompt);
 
-        // Limpeza extra para garantir que temos apenas o JSON
         const cleanedJson = jsonResponse.replace(/```json/g, '').replace(/```/g, '').trim();
 
         const extractedData = JSON.parse(cleanedJson);

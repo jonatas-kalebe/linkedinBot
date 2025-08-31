@@ -38,16 +38,12 @@ async function generateContentWithFallback(prompt: string): Promise<string> {
   throw new Error('Não foi possível obter resposta de nenhum modelo da IA.');
 }
 
-// ### FUNÇÃO DE ANÁLISE REESCRITA E MAIS INTELIGENTE ###
-// ... (imports e a função generateContentWithFallback permanecem os mesmos) ...
 
-// ### FUNÇÃO DE ANÁLISE REESCRITA PARA RETORNAR UMA NOTA DE FIT ###
 export async function analyzeJobFit(
   jobDescription: string,
   userProfile: string,
   allowedLanguages: string[]
 ): Promise<{ fit: boolean; fitScore: number; language: string; reason: string }> {
-// Na sua função analyzeJobFit
   const prompt = `
   **TAREFA:** Você é um Agente de Carreira de IA, especialista em recrutamento técnico. Sua missão é analisar a VAGA DE EMPREGO abaixo com base no PERFIL DO USUÁRIO e suas regras, para calcular uma "nota de fit" de 0 a 10. A nota deve representar a probabilidade real de o candidato ser chamado para uma entrevista.
 
@@ -136,8 +132,7 @@ export async function generateLatexCV(jobDescription: string, userProfile: strin
   ---
   **CÓDIGO LATEX GERADO (COMECE DIRETAMENTE COM A PRIMEIRA LINHA DE CÓDIGO):**
 `;
-    // Adiciona uma etapa de limpeza final para remover qualquer markdown que a IA possa adicionar por teimosia
-    const rawLatex = await generateContentWithFallback(prompt);
+  const rawLatex = await generateContentWithFallback(prompt);
     return rawLatex.replace(/```latex/g, '').replace(/```/g, '').trim();
 }
 
@@ -155,7 +150,6 @@ export async function generateWithRetry(prompt: string, retries = 3): Promise<st
         console.error(`❌ Todas as ${retries} tentativas falharam. Abortando a operação.`);
         throw new Error(`Falha ao gerar conteúdo com o modelo ${proModelName} após ${retries} tentativas.`);
       }
-      // Espera um pouco antes de tentar novamente (backoff simples)
       await new Promise(res => setTimeout(res, 1000 * attempt));
     }
   }
@@ -176,7 +170,6 @@ export async function generateWithRetryLite(prompt: string, retries = 3): Promis
         console.error(`❌ Todas as ${retries} tentativas falharam. Abortando a operação.`);
         throw new Error(`Falha ao gerar conteúdo com o modelo ${proModelNameLite} após ${retries} tentativas.`);
       }
-      // Espera um pouco antes de tentar novamente (backoff simples)
       await new Promise(res => setTimeout(res, 1000 * attempt));
     }
   }

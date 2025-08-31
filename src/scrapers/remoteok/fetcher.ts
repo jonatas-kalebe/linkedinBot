@@ -1,27 +1,13 @@
-// src/scrapers/remoteok/fetcher.ts
-
 import {Page} from 'puppeteer';
 import * as fs from 'fs';
 import * as path from 'path';
 import config from '../../config';
-import initialSelectors from './selectors'; // Importa os seletores iniciais e para tipagem
+import initialSelectors from './selectors';
 import {humanizedWait} from "../../utils/humanization";
 import {JobData} from '../../core/jobProcessor';
 import {attemptSelfCorrection} from '../../services/selfCorrectionService';
+import {safeExtract} from "../../utils/extractor";
 
-// << REINTRODUZIDO: Helper para extrair dados de forma segura e lançar erro específico >>
-async function safeExtract(page: Page, selectors: typeof initialSelectors, selectorKey: keyof typeof initialSelectors, goal: string): Promise<string> {
-    const selector = selectors[selectorKey];
-    if (!selector) {
-        throw new Error(`SelectorError: Chave de seletor "${selectorKey}" não encontrada.`);
-    }
-    try {
-        await page.waitForSelector(selector, {timeout: 7000});
-        return await page.$eval(selector, el => (el as HTMLElement).innerText.trim());
-    } catch (error) {
-        throw new Error(`SelectorError: Falha ao tentar "${goal}" com a chave "${selectorKey}" (seletor: "${selector}")`);
-    }
-}
 
 export async function* fetchRemoteOKJobs(page: Page, processedUrls: Set<string>): AsyncGenerator<Omit<JobData, 'source'>> {
     const BASE_URL = 'https://remoteok.com/remote-';
@@ -63,10 +49,9 @@ export async function* fetchRemoteOKJobs(page: Page, processedUrls: Set<string>)
                 continue;
             }
 
-            // << REINTRODUZIDO: Lógica completa de tentativas e auto-correção >>
             let success = false;
             let attempts = 0;
-            const MAX_ATTEMPTS = 3; // 1 tentativa normal, 2 tentativas com IA
+            const MAX_ATTEMPTS = 3;
             let currentSelectors = initialSelectors;
             const originalSelectorsPath = path.resolve(__dirname, 'selectors.ts');
             let tempSelectorsPath: string | null = null;
@@ -95,21 +80,20 @@ export async function* fetchRemoteOKJobs(page: Page, processedUrls: Set<string>)
                         });
 
                         if (newTempPath) {
-                            if (tempSelectorsPath) fs.unlinkSync(tempSelectorsPath); // Limpa o temp antigo se houver
+                            if (tempSelectorsPath) fs.unlinkSync(tempSelectorsPath);
                             tempSelectorsPath = newTempPath;
                             delete require.cache[require.resolve(tempSelectorsPath)];
                             currentSelectors = require(tempSelectorsPath).default;
                             console.log(`- Tentando novamente com seletores corrigidos pela IA...`);
                         } else {
-                            break; // Se a IA falhou em gerar uma correção, desiste
+                            break;
                         }
                     } else {
-                        break; // Se não for um erro de seletor ou se já esgotou as tentativas, desiste
+                        break;
                     }
                 }
             }
 
-            // << REINTRODUZIDO: Lógica de promoção e limpeza >>
             if (success && tempSelectorsPath) {
                 console.log(`- ✅ Correção da IA bem-sucedida! Promovendo para o arquivo original...`);
                 const correctedContent = fs.readFileSync(tempSelectorsPath, 'utf-8');

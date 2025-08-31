@@ -1,4 +1,3 @@
-// src/scrapers/linkedin/index.ts
 import {Page} from 'puppeteer';
 import {Scraper} from '../scraper.interface';
 import {JobData} from '../../core/jobProcessor';
@@ -6,17 +5,15 @@ import config from '../../config';
 import {humanizedWait, performCoverAction} from "../../utils/humanization";
 import {verifyLinkedInSession} from './login';
 import {fetchLinkedInJobs} from "./fetcher";
-import {loadProcessedJobs} from '../../core/fileManager'; // << NOVO >>
+import {loadProcessedJobs} from '../../core/fileManager';
 
 export const linkedinScraper: Scraper = {
     name: 'LinkedIn',
     run: async function* (page: Page): AsyncGenerator<JobData> {
         console.log(`\n--- ▶️ Iniciando scraper: ${this.name} ---`);
-        const processedUrls = loadProcessedJobs(this.name); // << NOVO >>
-
+        const processedUrls = loadProcessedJobs(this.name);
         await verifyLinkedInSession(page);
 
-        // << ALTERAÇÃO >> Usa o nome correto do config
         const shuffledQueries = config.LINKEDIN_SEARCH_QUERIES.sort(() => 0.5 - Math.random());
 
         for (const query of shuffledQueries) {

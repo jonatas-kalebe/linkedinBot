@@ -1,8 +1,12 @@
-// src/scrapers/programathor/selectors.ts
 export default {
-    jobListItem: '.cell-list',
-    jobLink: 'a',
-    jobTitle: 'h1.job-show-title',
-    companyName: 'h4.job-show-company',
+
+    jobListItemContainer: '.cell-list',
+
+    expiredTagInListItem: 'span.border-red',
+
+    jobLinkInListItem: 'a',
+
+    jobTitle: '.wrapper-header-job-show h1',
+    companyName: '.wrapper-content-job-show h2 a',
     jobDescription: '.wrapper-content-job-show',
 };

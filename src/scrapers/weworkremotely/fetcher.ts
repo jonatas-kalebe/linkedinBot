@@ -1,5 +1,3 @@
-// src/scrapers/weworkremotely/fetcher.ts
-
 import {Page} from 'puppeteer';
 import config from '../../config';
 import selectors from './selectors';
@@ -10,8 +8,6 @@ import {extractJobDataWithAI} from '../../services/dynamicExtractionService';
 export async function* fetchWWRJobs(page: Page, processedUrls: Set<string>): AsyncGenerator<Omit<JobData, 'source'>> {
     const BASE_URL = 'https://weworkremotely.com/remote-jobs/search?term=';
 
-    // << ESTRUTURA CORRIGIDA: Loop principal por palavra-chave >>
-    // Itera sobre cada busca definida no seu arquivo de configuração.
     for (const query of config.WWR_SEARCH_QUERIES) {
         const searchUrl = `${BASE_URL}${encodeURIComponent(query)}`;
         console.log(`\n[WWR] Iniciando busca por "${query}" em: ${searchUrl}`);
@@ -27,18 +23,16 @@ export async function* fetchWWRJobs(page: Page, processedUrls: Set<string>): Asy
 
             if (jobLinksForThisQuery.length === 0) {
                 console.log(`- Nenhuma vaga encontrada para "${query}".`);
-                continue; // Pula para a próxima palavra-chave
+                continue;
             }
 
             console.log(`- Encontrados ${jobLinksForThisQuery.length} links para "${query}". Iniciando análise...`);
 
         } catch (error) {
             console.warn(`- ⚠️ [WWR] Busca por "${query}" falhou ou não retornou resultados. Pulando para a próxima busca.`);
-            continue; // Pula para a próxima palavra-chave
+            continue;
         }
 
-        // << ESTRUTURA CORRIGIDA: Loop aninhado para processamento imediato >>
-        // Para cada link encontrado NA BUSCA ATUAL, processa-o imediatamente.
         for (const link of jobLinksForThisQuery) {
             const urlObject = new URL(link);
             const normalizedUrl = `${urlObject.origin}${urlObject.pathname}`;

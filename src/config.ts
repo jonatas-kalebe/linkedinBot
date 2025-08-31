@@ -26,6 +26,13 @@ export default {
         "software engineer"
     ],
 
+    PROGRAMATHOR_SEARCHES: [
+        {keyword: 'Java', contract: 'PJ', expertise: 'Pleno'},
+        {keyword: 'Java', contract: 'PJ', expertise: 'Sênior'},
+        {keyword: 'Angular', contract: 'PJ', expertise: 'Pleno'},
+        {keyword: 'Angular', contract: 'PJ', expertise: 'Sênior'},
+    ],
+
     LOCATION: "Worldwide",
     JOB_DESCRIPTION_LANGUAGES: ["portuguese", "english"],
     SEARCH_INTERVAL_MINUTES: 20,

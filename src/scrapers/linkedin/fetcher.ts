@@ -10,7 +10,6 @@ export interface JobData {
     description: string;
 }
 
-// MELHORIA: Função de espera com tempo aleatório para simular comportamento humano.
 const randomWait = (min: number, max: number) => new Promise(res => setTimeout(res, Math.random() * (max - min) + min));
 
 /**
@@ -68,13 +67,12 @@ export async function* fetchLinkedInJobs(
             await humanizedWait(page, 3000, 6000);
         }
 
-        // MELHORIA: Simula uma rolagem mais humana na página.
         console.log("   -> Rolando a página para carregar mais vagas...");
         await page.evaluate(async () => {
             const scrollHeight = document.body.scrollHeight;
             for (let i = 0; i < scrollHeight; i += 100) {
                 window.scrollTo(0, i);
-                await new Promise(resolve => setTimeout(resolve, Math.random() * 20 + 10)); // Pequenas pausas durante a rolagem
+                await new Promise(resolve => setTimeout(resolve, Math.random() * 20 + 10));
             }
         });
         await humanizedWait(page, 2000, 4000);
@@ -96,18 +94,16 @@ export async function* fetchLinkedInJobs(
         if (newLinksToProcess.length === 0) {
             console.log("Todos os links nesta página já foram processados.");
 
-            // NOVA LÓGICA: Incrementa o contador e verifica se o limite foi atingido.
             consecutiveEmptyPages++;
             console.log(`   -> Páginas consecutivas sem vagas novas: ${consecutiveEmptyPages}/2`);
             if (consecutiveEmptyPages >= 2) {
                 console.log("   -> Limite atingido. Finalizando esta busca e passando para a próxima query.");
-                break; // Sai do laço 'while' e encerra a busca para esta palavra-chave.
+                break;
             }
 
-            continue; // Pula para a próxima página de resultados
+            continue;
         }
 
-        // NOVA LÓGICA: Se encontrarmos vagas novas, o contador é zerado.
         consecutiveEmptyPages = 0;
 
         console.log(`Destes, ${newLinksToProcess.length} são novos. Começando a análise...`);
@@ -131,7 +127,6 @@ export async function* fetchLinkedInJobs(
                 } catch (error) {
                     console.warn(`   - Tentativa ${attempt} de ${MAX_RETRIES} falhou ao processar a vaga em ${link}.`);
                     if (attempt < MAX_RETRIES) {
-                        // MELHORIA: Exponential backoff + jitter para as tentativas
                         const waitTime = Math.pow(2, attempt) * 1000 + Math.random() * 2000;
                         console.log(`   - Atualizando a página e tentando novamente em ${Math.round(waitTime / 1000)}s...`);
                         await page.reload({waitUntil: 'domcontentloaded', timeout: 60000});

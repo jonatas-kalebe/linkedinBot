@@ -1,4 +1,4 @@
-import { Page } from 'puppeteer';
+import {Page} from 'puppeteer';
 
 /**
  * Aguarda por um período aleatório dentro de um intervalo, exibindo uma mensagem.
@@ -30,7 +30,7 @@ export async function typeLikeHuman(page: Page, selector: string, text: string) 
  * @param page Objeto da página do Puppeteer.
  */
 export async function performCoverAction(page: Page) {
-    const actions = ['visitFeed', 'scrollRandomly', 'doNothing', 'doNothing']; // "doNothing" tem mais peso
+    const actions = ['visitFeed', 'scrollRandomly', 'doNothing', 'doNothing'];
     const randomAction = actions[Math.floor(Math.random() * actions.length)];
 
     console.log(`-- Humanizing: Executando ação de cobertura: ${randomAction}`);
@@ -48,7 +48,7 @@ export async function performCoverAction(page: Page) {
                 await humanizedWait(page, 3000, 10000);
                 break;
             case 'doNothing':
-                await humanizedWait(page, 8000, 20000); // Apenas "pensa" por um tempo
+                await humanizedWait(page, 8000, 20000);
                 break;
         }
     } catch (e) {
@@ -63,11 +63,10 @@ export async function performCoverAction(page: Page) {
 export function isWithinWorkingHours(): boolean {
     const now = new Date();
     const hour = now.getHours();
-    const day = now.getDay(); // 0 = Domingo, 6 = Sábado
-
+    const day = now.getDay();
     if (day === 0 || day === 6) {
         return hour >= 11 && hour < 15;
-        return false; // Não opera nos finais de semana
+        return false;
     }
-    return hour >= 8 && hour < 19; // Opera das 8h até as 18:59
+    return hour >= 8 && hour < 19;
 }
