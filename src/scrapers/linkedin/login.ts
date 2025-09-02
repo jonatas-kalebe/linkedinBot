@@ -3,7 +3,7 @@ import {Page} from 'puppeteer';
 import selectors from './selectors';
 import config from '../../config';
 import {humanizedWait, typeLikeHuman} from '../../utils/humanization';
-import {takeScreenshotOnError} from "../../core/browserManager";
+import {takeScreenshotOnError} from "../../core/puppeteerManager";
 import ask from "../../utils/ask";
 
 export async function loginToLinkedIn(page: Page): Promise<void> {

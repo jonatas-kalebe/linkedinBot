@@ -90,15 +90,20 @@ export async function* fetchProgramathorJobs(page: Page, processedUrls: Set<stri
                         console.warn(`- [Programathor] Tentativa ${attempts}/${MAX_ATTEMPTS} falhou: ${error.message}`);
                         if (error.message.startsWith('SelectorError:') && attempts < MAX_ATTEMPTS) {
                             const brokenSelectorKey = error.message.match(/chave "([^"]+)"/)?.[1] || 'unknown';
-                            const newTempPath = await attemptSelfCorrection(page, {
+
+                            // << CORREÇÃO PRINCIPAL AQUI >>
+                            // @ts-ignore
+                            const correctionResult = await attemptSelfCorrection(page, {
                                 siteName: 'Programathor', failedUrl: link, goal: error.message, brokenSelectorKey,
                                 selectorsFilePath: tempSelectorsPath || originalSelectorsPath
                             });
-                            if (newTempPath) {
+
+                            if (correctionResult) {
                                 if (tempSelectorsPath) fs.unlinkSync(tempSelectorsPath);
-                                tempSelectorsPath = newTempPath;
-                                delete require.cache[require.resolve(tempSelectorsPath)];
-                                currentSelectors = require(tempSelectorsPath).default;
+
+                                tempSelectorsPath = correctionResult.path;
+                                currentSelectors = correctionResult.selectors; // Sem require(), sem erros de tipo!
+
                                 console.log(`- Tentando novamente com seletores corrigidos pela IA...`);
                             } else {
                                 break;
