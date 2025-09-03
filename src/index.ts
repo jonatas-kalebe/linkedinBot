@@ -15,6 +15,8 @@ import {remoteOkScraper} from './scrapers/remoteok';
 import {programathorScraper} from "./scrapers/programathor";
 import {theMuseScraper} from "./scrapers/themuse";
 import {remotiveScraper} from "./scrapers/remotive";
+import {wellfoundScraper} from "./scrapers/wellfound";
+import {gupyScraper} from "./scrapers/gupy";
 
 // Interface para agrupar o scraper com seu gerador
 interface ScraperSession {
@@ -31,8 +33,10 @@ async function main() {
     if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir);
 
     const scrapersToRun: Scraper[] = [
-        // theMuseScraper,
-        // linkedinScraper,
+        gupyScraper,
+        wellfoundScraper,
+        theMuseScraper,
+        linkedinScraper,
 
         programathorScraper,
         weWorkRemotelyScraper,

@@ -2,7 +2,7 @@ export default {
     LINKEDIN_EMAIL: "seu_email@aqui.com",
     LINKEDIN_PASSWORD: "sua_senha_aqui",
 
-    CV_LATEX_TEMPLATE_PATH: "C:\\Users\\jonatas.mfreitas\\Desktop\\linkedin-easy-apply-bot-main\\ResumeLatex.txt",
+    CV_LATEX_TEMPLATE_PATH: "C:\\Users\\jonat\\OneDrive\\Área de Trabalho\\linkedin-easy-apply-bot-main\\ResumeLatex.txt",
 
     LINKEDIN_SEARCH_QUERIES: ["Java Developer Remote",
 
@@ -46,6 +46,20 @@ export default {
         "Spring Boot",
         "Software Engineer"
     ],
+    WELLFOUND_SEARCH_QUERIES: [
+        "Java Developer",
+        "Angular Developer",
+        "Fullstack Developer",
+        "Backend Engineer"
+    ],
+    GUPY_SEARCH_QUERIES: [
+        "Desenvolvedor Java Remoto",
+        "Desenvolvedor Angular Remoto",
+        "Engenheiro de Software Remoto",
+        "Fullstack Developer",
+        "Backend Developer Pleno"
+    ],
+
     LOCATION: "Worldwide",
     JOB_DESCRIPTION_LANGUAGES: ["portuguese", "english"],
     SEARCH_INTERVAL_MINUTES: 20,
