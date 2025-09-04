@@ -53,6 +53,8 @@ export default {
         "Backend Engineer"
     ],
     GUPY_SEARCH_QUERIES: [
+        "Java",
+        "Angular",
         "Desenvolvedor Java Remoto",
         "Desenvolvedor Angular Remoto",
         "Engenheiro de Software Remoto",

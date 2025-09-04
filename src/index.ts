@@ -34,8 +34,8 @@ async function main() {
 
     const scrapersToRun: Scraper[] = [
         gupyScraper,
-        wellfoundScraper,
-        theMuseScraper,
+        // wellfoundScraper,
+        // theMuseScraper,
         linkedinScraper,
 
         programathorScraper,

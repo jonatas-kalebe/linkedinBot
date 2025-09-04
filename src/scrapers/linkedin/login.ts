@@ -61,7 +61,7 @@ export async function verifyLinkedInSession(page: Page): Promise<void> {
       timeout: 45000
     });
 
-    await ask('scrolla um pouco ai mulek')
+    // await ask('scrolla um pouco ai mulek')
     const isLoggedIn = true;
 
     if (isLoggedIn) {
