@@ -1,9 +1,8 @@
-// src/scrapers/themuse/index.ts
-import { Page } from 'puppeteer';
-import { Scraper } from '../scraper.interface';
-import { JobData } from '../../core/jobProcessor';
-import { fetchTheMuseJobs } from './fetcher';
-import { loadProcessedJobs } from '../../core/fileManager';
+import {Page} from 'puppeteer';
+import {Scraper} from '../scraper.interface';
+import {JobData} from '../../core/jobProcessor';
+import {fetchTheMuseJobs} from './fetcher';
+import {loadProcessedJobs} from '../../core/fileManager';
 
 export const theMuseScraper: Scraper = {
     name: 'The Muse API',
@@ -11,11 +10,10 @@ export const theMuseScraper: Scraper = {
         console.log(`\n--- ▶️ Iniciando scraper: ${this.name} ---`);
         const processedUrls = loadProcessedJobs(this.name);
 
-        // Note que o 'page' não é passado para o fetcher, pois ele não precisa.
         const jobDataGenerator = fetchTheMuseJobs(processedUrls);
 
         for await (const job of jobDataGenerator) {
-            yield { ...job, source: this.name };
+            yield {...job, source: this.name};
         }
 
         console.log(`--- ✅ Finalizado scraper: ${this.name} ---`);

@@ -34,10 +34,10 @@ export default {
     ],
 
     REMOTIVE_SEARCHES: [
-        { tags: 'java', locations: 'Brazil' },
-        { tags: 'angular', locations: 'Brazil' },
-        { tags: 'fullstack', locations: 'Worldwide' },
-        { tags: 'backend', locations: 'Worldwide' },
+        {tags: 'java', locations: 'Brazil'},
+        {tags: 'angular', locations: 'Brazil'},
+        {tags: 'fullstack', locations: 'Worldwide'},
+        {tags: 'backend', locations: 'Worldwide'},
     ],
 
     THEMUSE_SEARCH_QUERIES: [

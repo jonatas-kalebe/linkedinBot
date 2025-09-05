@@ -1,11 +1,8 @@
-// src/scrapers/wellfound/fetcher.ts
 import axios from 'axios';
 import config from '../../config';
-import { JobData } from '../../core/jobProcessor';
+import {JobData} from '../../core/jobProcessor';
 import * as cheerio from 'cheerio';
 
-// Esta é a query GraphQL que o site Wellfound usa para buscar vagas.
-// Fizemos a engenharia reversa para você.
 const GQL_QUERY = `
     query JobSearch($query: String, $page: Int, $remote: Boolean, $compensation: [CompensationInput!]) {
       jobListings(
@@ -47,10 +44,10 @@ export async function* fetchWellfoundJobs(processedUrls: Set<string>): AsyncGene
                     variables: {
                         query: query,
                         page: currentPage,
-                        remote: true, // Filtro para vagas remotas
+                        remote: true,
                     }
                 }, {
-                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                    headers: {'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'}
                 });
 
                 const jobListings = response.data.data.jobListings;
@@ -69,7 +66,6 @@ export async function* fetchWellfoundJobs(processedUrls: Set<string>): AsyncGene
                     const normalizedUrl = new URL(job.url).origin + new URL(job.url).pathname;
                     if (processedUrls.has(normalizedUrl)) continue;
 
-                    // A descrição vem em HTML, limpamos com Cheerio
                     const $ = cheerio.load(job.description || '');
 
                     yield {

@@ -1,16 +1,16 @@
-import { Page } from 'puppeteer';
+import {Page} from 'puppeteer';
 import * as fs from 'fs';
 import * as path from 'path';
 import config from '../../config';
 import initialSelectors from './selectors';
-import { humanizedWait } from "../../utils/humanization";
-import { JobData } from '../../core/jobProcessor';
-import { attemptSelfCorrection } from '../../services/selfCorrectionService';
-import { safeExtract } from '../../utils/extractor';
-import { cleanHtmlForAnalysisCheerio } from "../../utils/htmlUtils";
+import {humanizedWait} from "../../utils/humanization";
+import {JobData} from '../../core/jobProcessor';
+import {attemptSelfCorrection} from '../../services/selfCorrectionService';
+import {safeExtract} from '../../utils/extractor';
+import {cleanHtmlForAnalysisCheerio} from "../../utils/htmlUtils";
 
-// Tipos para clareza
 type Selectors = Record<string, string>;
+
 interface CorrectionResult {
     path: string;
     selectors: Selectors;
@@ -37,9 +37,9 @@ async function saveErrorHtml(page: Page, fileName: string): Promise<void> {
 async function getJobLinksFromSearchPage(page: Page, searchUrl: string): Promise<string[]> {
     console.log(`\n[Remotive] Buscando links em: ${searchUrl}`);
     try {
-        await page.goto(searchUrl, { waitUntil: 'networkidle0', timeout: 60000 });
+        await page.goto(searchUrl, {waitUntil: 'networkidle0', timeout: 60000});
         await humanizedWait(page, 2000, 3000);
-        await page.waitForSelector(initialSelectors.jobListItemLink, { timeout: 20000 });
+        await page.waitForSelector(initialSelectors.jobListItemLink, {timeout: 20000});
 
         const jobLinks = await page.$$eval(initialSelectors.jobListItemLink, (links) =>
             [...new Set(links.map(a => (a as HTMLAnchorElement).href))]
@@ -50,7 +50,7 @@ async function getJobLinksFromSearchPage(page: Page, searchUrl: string): Promise
     } catch (error) {
         console.warn(`- ⚠️ [Remotive] Falha ao buscar links. Salvando HTML para análise...`);
         await saveErrorHtml(page, 'remotive_search_error.html');
-        return []; // Retorna um array vazio para não quebrar o fluxo principal
+        return [];
     }
 }
 
@@ -65,19 +65,18 @@ async function scrapeJobDetails(page: Page, link: string): Promise<Omit<JobData,
     for (let attempts = 1; attempts <= 3; attempts++) {
         try {
             await humanizedWait(page, 2000, 4000);
-            await page.goto(link, { waitUntil: 'domcontentloaded' });
+            await page.goto(link, {waitUntil: 'domcontentloaded'});
 
             const title = await safeExtract(page, currentSelectors, 'jobTitle', 'extrair título');
             const company = await safeExtract(page, currentSelectors, 'companyName', 'extrair empresa');
             const description = await safeExtract(page, currentSelectors, 'jobDescription', 'extrair descrição');
 
-            // Sucesso! Promove a correção (se houver) e retorna os dados.
             if (tempSelectorsPath) {
                 fs.writeFileSync(originalSelectorsPath, fs.readFileSync(tempSelectorsPath, 'utf-8'));
                 console.log(`- ✅ Correção da IA promovida para o arquivo original!`);
                 fs.unlinkSync(tempSelectorsPath);
             }
-            return { url: link, title, company, description };
+            return {url: link, title, company, description};
 
         } catch (error: any) {
             console.warn(`- [Remotive] Tentativa ${attempts}/3 falhou para ${link.substring(0, 70)}...`);
@@ -90,20 +89,19 @@ async function scrapeJobDetails(page: Page, link: string): Promise<Omit<JobData,
                 });
 
                 if (correctionResult) {
-                    if (tempSelectorsPath) fs.unlinkSync(tempSelectorsPath); // Limpa temp antigo
+                    if (tempSelectorsPath) fs.unlinkSync(tempSelectorsPath);
                     tempSelectorsPath = correctionResult.path;
                     currentSelectors = correctionResult.selectors;
                     console.log(`- Tentando novamente com seletores corrigidos pela IA...`);
                 } else {
-                    break; // IA não conseguiu corrigir, desiste das retentativas
+                    break;
                 }
             } else {
-                break; // Erro não é de seletor ou já esgotou tentativas
+                break;
             }
         }
     }
 
-    // Se chegou até aqui, todas as tentativas falharam. Limpa arquivos temporários.
     if (tempSelectorsPath) {
         console.log(`- ❌ Correção da IA não funcionou. Descartando arquivo temporário.`);
         fs.unlinkSync(tempSelectorsPath);

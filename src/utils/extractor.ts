@@ -1,5 +1,3 @@
-// src/utils/extractor.ts
-
 import {Page} from 'puppeteer';
 
 /**

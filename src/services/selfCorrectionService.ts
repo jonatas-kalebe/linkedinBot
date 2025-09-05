@@ -13,8 +13,6 @@ interface CorrectionContext {
     selectorsFilePath: string;
 }
 
-// << CORREÇÃO: A interface de resultado agora é genérica >>
-// Ela aceita um tipo 'T', que será a forma específica do nosso objeto de seletores.
 interface CorrectionResult<T> {
     path: string;
     selectors: T;
@@ -27,7 +25,6 @@ interface CorrectionResult<T> {
  * @param context O contexto da falha.
  * @returns {Promise<CorrectionResult<T> | null>} O caminho para o arquivo temporário e o objeto de seletores corrigido.
  */
-// << CORREÇÃO: A função agora é genérica, recebendo o tipo <T> >>
 export async function attemptSelfCorrection<T>(page: Page, context: CorrectionContext): Promise<CorrectionResult<T> | null> {
     console.warn(`\n--- 🤖 INICIANDO CICLO DE AUTO-CORREÇÃO para [${context.siteName}] ---`);
     console.warn(`- Motivo: Falha ao tentar "${context.goal}" com a chave "${context.brokenSelectorKey}"`);
@@ -63,7 +60,6 @@ export async function attemptSelfCorrection<T>(page: Page, context: CorrectionCo
           - A resposta deve começar diretamente com "export default {" e terminar com "};".
         `;
 
-        // A lógica de limpeza do markdown da IA já está aqui
         const rawCorrectedCode = await generateWithRetry(prompt);
         let correctedCode = rawCorrectedCode;
         const codeBlockRegex = /```(?:typescript|json)?\s*([\s\S]*?)\s*```/;
@@ -87,18 +83,16 @@ export async function attemptSelfCorrection<T>(page: Page, context: CorrectionCo
         fs.writeFileSync(tempFilePath, correctedCode);
         console.log(`- ✅ IA retornou uma correção. Salvo em arquivo temporário: ${tempFileName}`);
 
-        // << CORREÇÃO DO BUG: Carrega o novo módulo aqui e retorna o objeto >>
         try {
             delete require.cache[require.resolve(tempFilePath)];
             const newSelectors = require(tempFilePath).default;
             console.log('- Módulo de seletores temporário carregado com sucesso.');
 
-            // Retornamos o caminho E o objeto de seletores, garantindo ao TypeScript que ele tem o tipo T.
-            return { path: tempFilePath, selectors: newSelectors as T };
+            return {path: tempFilePath, selectors: newSelectors as T};
 
         } catch (e) {
             console.error('- ❌ Falha ao carregar o arquivo de seletores temporário gerado pela IA.', e);
-            if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath); // Limpa o arquivo inválido
+            if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
             return null;
         }
 

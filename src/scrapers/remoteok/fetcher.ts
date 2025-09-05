@@ -75,20 +75,16 @@ export async function* fetchRemoteOKJobs(page: Page, processedUrls: Set<string>)
                     if (error.message.startsWith('SelectorError:') && attempts < MAX_ATTEMPTS) {
                         const brokenSelectorKey = error.message.match(/chave "([^"]+)"/)?.[1] || 'unknown';
 
-                        // << CORREÇÃO PRINCIPAL AQUI >>
                         // @ts-ignore
                         const correctionResult = await attemptSelfCorrection(page, {
                             siteName: 'RemoteOK', failedUrl: link, goal: error.message, brokenSelectorKey,
                             selectorsFilePath: tempSelectorsPath || originalSelectorsPath
                         });
 
-                        // Agora verificamos o objeto de resultado, não apenas o caminho
                         if (correctionResult) {
-                            if (tempSelectorsPath) fs.unlinkSync(tempSelectorsPath); // Limpa o temp antigo
-
-                            tempSelectorsPath = correctionResult.path;        // Salva o caminho para promover depois
-                            currentSelectors = correctionResult.selectors;    // Usa o objeto de seletores DIRETAMENTE
-
+                            if (tempSelectorsPath) fs.unlinkSync(tempSelectorsPath);
+                            tempSelectorsPath = correctionResult.path;
+                            currentSelectors = correctionResult.selectors;
                             console.log(`- Tentando novamente com seletores corrigidos pela IA...`);
                         } else {
                             break;

@@ -16,8 +16,7 @@ cp config.ts config.ts
 config.ts
 ```TS
 export default {
-  // LOGIN DETAILS
-  LINKEDIN_EMAIL: "your-linkedin-email",
+    LINKEDIN_EMAIL: "your-linkedin-email",
   LINKEDIN_PASSWORD: "your-linkedin-password",
 
   // JOB SEARCH PARAMETERS

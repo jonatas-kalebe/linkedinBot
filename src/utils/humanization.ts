@@ -20,7 +20,7 @@ export const humanizedWait = async (page: Page, minMillis: number, maxMillis: nu
  */
 export async function typeLikeHuman(page: Page, selector: string, text: string) {
     for (const char of text) {
-        await page.type(selector, char, { delay: Math.random() * 150 + 50 });
+        await page.type(selector, char, {delay: Math.random() * 150 + 50});
     }
 }
 
@@ -36,9 +36,9 @@ export async function performCoverAction(page: Page) {
     console.log(`-- Humanizing: Executando ação de cobertura: ${randomAction}`);
 
     try {
-        switch(randomAction) {
+        switch (randomAction) {
             case 'visitFeed':
-                await page.goto('https://www.linkedin.com/feed/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+                await page.goto('https://www.linkedin.com/feed/', {waitUntil: 'domcontentloaded', timeout: 60000});
                 await humanizedWait(page, 5000, 15000);
                 break;
             case 'scrollRandomly':

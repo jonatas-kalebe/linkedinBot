@@ -1,15 +1,14 @@
 import axios from 'axios';
 import config from '../../config';
-import { JobData } from '../../core/jobProcessor';
+import {JobData} from '../../core/jobProcessor';
 
-// Interface atualizada para refletir a estrutura real da API
 interface GupyJob {
     id: number;
     name: string;
     description: string;
     jobUrl: string;
-    careerPageName: string; // Campo que contém o nome da empresa
-    company?: { // Opcional, para o caso de a API mudar
+    careerPageName: string;
+    company?: {
         name: string;
     };
 }
@@ -45,8 +44,6 @@ export async function* fetchGupyJobs(processedUrls: Set<string>): AsyncGenerator
                 console.log(`- 📄 Página ${offset / JOBS_PER_PAGE + 1}. Encontrados ${jobs.length} resultados.`);
 
                 for (const job of jobs) {
-                    // Dica de debug: para ver a estrutura de um job, descomente a linha abaixo
-                    // console.log(JSON.stringify(job, null, 2));
 
                     const jobUrl = job.jobUrl;
                     const normalizedUrl = new URL(jobUrl).origin + new URL(jobUrl).pathname;
@@ -58,10 +55,7 @@ export async function* fetchGupyJobs(processedUrls: Set<string>): AsyncGenerator
                     yield {
                         url: jobUrl,
                         title: job.name,
-                        // --- INÍCIO DA CORREÇÃO ---
-                        // Usamos careerPageName e adicionamos fallbacks para segurança.
                         company: job.careerPageName ?? job.company?.name ?? 'Empresa não informada',
-                        // --- FIM DA CORREÇÃO ---
                         description: job.description,
                     };
                 }
@@ -73,7 +67,6 @@ export async function* fetchGupyJobs(processedUrls: Set<string>): AsyncGenerator
                 }
 
             } catch (error: any) {
-                // Agora o erro de 'name' não deve mais acontecer, mas mantemos o catch para outros erros.
                 console.error(`- ❌ [Gupy API] Erro ao processar vagas para "${query}" (offset: ${offset}):`, error instanceof Error ? error.message : error);
                 hasMoreJobs = false;
             }

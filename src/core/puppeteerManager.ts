@@ -1,4 +1,3 @@
-
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import {Browser, Page} from 'puppeteer';
@@ -15,20 +14,17 @@ export async function launchBrowser(): Promise<{ browser: Browser; page: Page }>
         headless: false,
         userDataDir: path.join(__dirname, '../../session'),
         args: [
-            '--start-maximized', // Mantido da sua base
-            // Argumentos adicionados para maior estabilidade e para evitar detecção
-            '--no-sandbox',
+            '--start-maximized', '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-infobars',
             '--disable-notifications',
             '--ignore-certifcate-errors',
             '--ignore-certifcate-errors-spki-list',
-                                ]
+        ]
     });
     const page = (await browser.pages())[0] || await browser.newPage();
     await page.setViewport({width: 1920, height: 1080});
 
-    // Adiciona o cursor realista para simular movimentos humanos
     createCursor(page);
 
     console.log('✅ Navegador pronto.');

@@ -1,10 +1,8 @@
-// src/scrapers/themuse/fetcher.ts
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import config from '../../config';
-import { JobData } from '../../core/jobProcessor';
+import {JobData} from '../../core/jobProcessor';
 
-// Esta função NÃO precisa do 'page' do Puppeteer
 export async function* fetchTheMuseJobs(processedUrls: Set<string>): AsyncGenerator<Omit<JobData, 'source'>> {
     const BASE_URL = 'https://www.themuse.com/api/public/jobs';
 
@@ -24,9 +22,8 @@ export async function* fetchTheMuseJobs(processedUrls: Set<string>): AsyncGenera
                     }
                 });
 
-                const { results, page_count } = response.data;
-                totalPages = page_count; // Atualiza o total de páginas
-
+                const {results, page_count} = response.data;
+                totalPages = page_count;
                 console.log(`- Página ${currentPage}/${totalPages}. Encontrados ${results.length} resultados.`);
 
                 for (const job of results) {
@@ -35,20 +32,19 @@ export async function* fetchTheMuseJobs(processedUrls: Set<string>): AsyncGenera
 
                     if (processedUrls.has(normalizedUrl)) continue;
 
-                    // A descrição vem em HTML, então usamos o Cheerio para extrair o texto puro
                     const $ = cheerio.load(job.contents);
 
                     yield {
                         url: jobUrl,
                         title: job.name,
                         company: job.company.name,
-                        description: $('body').text(), // Converte a descrição HTML para texto
+                        description: $('body').text(),
                     };
                 }
                 currentPage++;
             } catch (error) {
                 console.error(`- ❌ [The Muse API] Erro ao buscar a página ${currentPage} para "${query}":`, error);
-                break; // Se uma página falhar, para a busca para esta query
+                break;
             }
         }
     }

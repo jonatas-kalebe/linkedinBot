@@ -44,7 +44,7 @@ export async function* fetchWWRJobs(page: Page, processedUrls: Set<string>): Asy
 
             try {
                 await humanizedWait(page, 2000, 4000);
-                await page.goto(link, { waitUntil: 'domcontentloaded' });
+                await page.goto(link, {waitUntil: 'domcontentloaded'});
 
                 const extractedData = await extractJobDataWithAI(page, link);
 

@@ -1,9 +1,8 @@
-// src/scrapers/remotive/index.ts
-import { Page } from 'puppeteer';
-import { Scraper } from '../scraper.interface';
-import { JobData } from '../../core/jobProcessor';
-import { fetchRemotiveJobs } from './fetcher';
-import { loadProcessedJobs } from '../../core/fileManager';
+import {Page} from 'puppeteer';
+import {Scraper} from '../scraper.interface';
+import {JobData} from '../../core/jobProcessor';
+import {fetchRemotiveJobs} from './fetcher';
+import {loadProcessedJobs} from '../../core/fileManager';
 
 export const remotiveScraper: Scraper = {
     name: 'Remotive',
@@ -14,7 +13,7 @@ export const remotiveScraper: Scraper = {
         const jobDataGenerator = fetchRemotiveJobs(page, processedUrls);
 
         for await (const job of jobDataGenerator) {
-            yield { ...job, source: this.name };
+            yield {...job, source: this.name};
         }
 
         console.log(`--- ✅ Finalizado scraper: ${this.name} ---`);

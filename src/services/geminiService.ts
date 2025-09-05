@@ -5,7 +5,7 @@ dotenv.config();
 
 const apiKey = process.env.GEMINI_API_KEY;
 if (!apiKey) {
-  throw new Error('A variável de ambiente GEMINI_API_KEY não foi definida.');
+    throw new Error('A variável de ambiente GEMINI_API_KEY não foi definida.');
 }
 
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -20,31 +20,31 @@ const proModelNameLite = 'gemini-2.5-flash-lite';
 let currentModelIndex = 0;
 
 async function generateContentWithFallback(prompt: string): Promise<string> {
-  while (currentModelIndex < models.length) {
-    try {
-      const modelName = models[currentModelIndex];
-      console.log(`🧠  Consultando a IA com o modelo: ${modelName}...`);
-      const model = genAI.getGenerativeModel({ model: modelName });
-      const result = await model.generateContent(prompt);
-      return result.response.text();
-    } catch (error: any) {
-      console.warn(`⚠️  Modelo ${models[currentModelIndex]} falhou ou atingiu o limite. Tentando o próximo...`);
-      currentModelIndex++;
-      if (currentModelIndex >= models.length) {
-        throw new Error('Todos os modelos da IA falharam ou atingiram o limite de uso.');
-      }
+    while (currentModelIndex < models.length) {
+        try {
+            const modelName = models[currentModelIndex];
+            console.log(`🧠  Consultando a IA com o modelo: ${modelName}...`);
+            const model = genAI.getGenerativeModel({model: modelName});
+            const result = await model.generateContent(prompt);
+            return result.response.text();
+        } catch (error: any) {
+            console.warn(`⚠️  Modelo ${models[currentModelIndex]} falhou ou atingiu o limite. Tentando o próximo...`);
+            currentModelIndex++;
+            if (currentModelIndex >= models.length) {
+                throw new Error('Todos os modelos da IA falharam ou atingiram o limite de uso.');
+            }
+        }
     }
-  }
-  throw new Error('Não foi possível obter resposta de nenhum modelo da IA.');
+    throw new Error('Não foi possível obter resposta de nenhum modelo da IA.');
 }
 
 
 export async function analyzeJobFit(
-  jobDescription: string,
-  userProfile: string,
-  allowedLanguages: string[]
+    jobDescription: string,
+    userProfile: string,
+    allowedLanguages: string[]
 ): Promise<{ fit: boolean; fitScore: number; language: string; reason: string }> {
-  const prompt = `
+    const prompt = `
   **TAREFA:** Você é um Agente de Carreira de IA, especialista em recrutamento técnico. Sua missão é analisar a VAGA DE EMPREGO abaixo com base no PERFIL DO USUÁRIO e suas regras, para calcular uma "nota de fit" de 0 a 10. A nota deve representar a probabilidade real de o candidato ser chamado para uma entrevista.
 
   ---
@@ -86,19 +86,19 @@ export async function analyzeJobFit(
   {"fit": boolean, "fitScore": number (0-10), "language": "idioma_detectado", "reason": "Cenário: [Nome do Cenário]. Nota Base: [X]. Ajustes: [Ex: -1 por exigir graduação, +1 por match de tecnologia]."}
 `;
 
-  try {
-    const rawResponse = await generateContentWithFallback(prompt);
-    const cleanedResponse = rawResponse.replace(/```json/g, '').replace(/```/g, '').trim();
-    const result = JSON.parse(cleanedResponse);
-    return result;
-  } catch (error) {
-    console.error("Erro ao processar resposta da IA. Retornando 'não fit'.", error);
-    return { fit: false, fitScore: 0, language: 'unknown', reason: 'Erro de análise da IA.' };
-}
+    try {
+        const rawResponse = await generateContentWithFallback(prompt);
+        const cleanedResponse = rawResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+        const result = JSON.parse(cleanedResponse);
+        return result;
+    } catch (error) {
+        console.error("Erro ao processar resposta da IA. Retornando 'não fit'.", error);
+        return {fit: false, fitScore: 0, language: 'unknown', reason: 'Erro de análise da IA.'};
+    }
 }
 
 export async function generateLatexCV(jobDescription: string, userProfile: string, latexTemplate: string, jobLanguage: string): Promise<string> {
-  const prompt = `
+    const prompt = `
   **TAREFA:** Você é um "Ghostwriter" de Currículos Técnicos Sênior e um compilador LaTeX. Sua missão é reescrever e adaptar o template LaTeX do usuário para criar o currículo MAIS PERFEITO POSSÍVEL para a vaga de emprego específica.
 
   **DIRETRIZ PRINCIPAL: ALINHAMENTO AGRESSIVO E ESTRATÉGICO**
@@ -132,46 +132,46 @@ export async function generateLatexCV(jobDescription: string, userProfile: strin
   ---
   **CÓDIGO LATEX GERADO (COMECE DIRETAMENTE COM A PRIMEIRA LINHA DE CÓDIGO):**
 `;
-  const rawLatex = await generateContentWithFallback(prompt);
+    const rawLatex = await generateContentWithFallback(prompt);
     return rawLatex.replace(/```latex/g, '').replace(/```/g, '').trim();
 }
 
 export async function generateWithRetry(prompt: string, retries = 3): Promise<string> {
-  const model = genAI.getGenerativeModel({ model: proModelName });
+    const model = genAI.getGenerativeModel({model: proModelName});
 
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      console.log(`🧠 Consultando a IA com o modelo de ponta [${proModelName}], Tentativa ${attempt}/${retries}...`);
-      const result = await model.generateContent(prompt);
-      return result.response.text();
-    } catch (error: any) {
-      console.warn(`⚠️ Tentativa ${attempt} falhou ao consultar o modelo ${proModelName}: ${error.message}`);
-      if (attempt === retries) {
-        console.error(`❌ Todas as ${retries} tentativas falharam. Abortando a operação.`);
-        throw new Error(`Falha ao gerar conteúdo com o modelo ${proModelName} após ${retries} tentativas.`);
-      }
-      await new Promise(res => setTimeout(res, 1000 * attempt));
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            console.log(`🧠 Consultando a IA com o modelo de ponta [${proModelName}], Tentativa ${attempt}/${retries}...`);
+            const result = await model.generateContent(prompt);
+            return result.response.text();
+        } catch (error: any) {
+            console.warn(`⚠️ Tentativa ${attempt} falhou ao consultar o modelo ${proModelName}: ${error.message}`);
+            if (attempt === retries) {
+                console.error(`❌ Todas as ${retries} tentativas falharam. Abortando a operação.`);
+                throw new Error(`Falha ao gerar conteúdo com o modelo ${proModelName} após ${retries} tentativas.`);
+            }
+            await new Promise(res => setTimeout(res, 1000 * attempt));
+        }
     }
-  }
-  throw new Error('Não foi possível obter resposta do modelo da IA.');
+    throw new Error('Não foi possível obter resposta do modelo da IA.');
 }
 
 export async function generateWithRetryLite(prompt: string, retries = 3): Promise<string> {
-  const model = genAI.getGenerativeModel({model: proModelNameLite});
+    const model = genAI.getGenerativeModel({model: proModelNameLite});
 
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      console.log(`🧠 Consultando a IA com o modelo de ponta [${proModelNameLite}], Tentativa ${attempt}/${retries}...`);
-      const result = await model.generateContent(prompt);
-      return result.response.text();
-    } catch (error: any) {
-      console.warn(`⚠️ Tentativa ${attempt} falhou ao consultar o modelo proModelNameLite{proModelName}: ${error.message}`);
-      if (attempt === retries) {
-        console.error(`❌ Todas as ${retries} tentativas falharam. Abortando a operação.`);
-        throw new Error(`Falha ao gerar conteúdo com o modelo ${proModelNameLite} após ${retries} tentativas.`);
-      }
-      await new Promise(res => setTimeout(res, 1000 * attempt));
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            console.log(`🧠 Consultando a IA com o modelo de ponta [${proModelNameLite}], Tentativa ${attempt}/${retries}...`);
+            const result = await model.generateContent(prompt);
+            return result.response.text();
+        } catch (error: any) {
+            console.warn(`⚠️ Tentativa ${attempt} falhou ao consultar o modelo proModelNameLite{proModelName}: ${error.message}`);
+            if (attempt === retries) {
+                console.error(`❌ Todas as ${retries} tentativas falharam. Abortando a operação.`);
+                throw new Error(`Falha ao gerar conteúdo com o modelo ${proModelNameLite} após ${retries} tentativas.`);
+            }
+            await new Promise(res => setTimeout(res, 1000 * attempt));
+        }
     }
-  }
-  throw new Error('Não foi possível obter resposta do modelo da IA.');
+    throw new Error('Não foi possível obter resposta do modelo da IA.');
 }
