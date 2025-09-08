@@ -1,25 +1,26 @@
 {
     "compilerOptions": {
         "lib": [
-            "es2021",
+            "es2022",
             "DOM"
         ],
+        "target": "es2022",
         "module": "commonjs",
-        "target": "es2021",
+        "moduleResolution": "node",
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
-        "moduleResolution": "node", // <-- AQUI ESTÁ A ÚNICA MUDANÇA
         "sourceMap": true,
-        "outDir": "./.ts-node",
-
-        "typeRoots": [
-            "./node_modules/@types",
-            "./src/types"
-        ]
+        "outDir": "./dist"
     },
     "include": [
         "src/**/*"
-    ]
+    ],
+    "ts-node": {
+        "compilerOptions": {
+            "module": "commonjs"
+        },
+        "transpileOnly": true
+    }
 }
