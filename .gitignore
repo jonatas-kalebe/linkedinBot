@@ -108,3 +108,4 @@ src/config.ts
 /session/
 /generated_cvs/
 /error_screenshots/
+/package-lock.json

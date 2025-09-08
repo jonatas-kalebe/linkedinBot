@@ -14,6 +14,7 @@ import {weWorkRemotelyScraper} from './scrapers/weworkremotely';
 import {remoteOkScraper} from './scrapers/remoteok';
 import {programathorScraper} from "./scrapers/programathor";
 import {gupyScraper} from "./scrapers/gupy";
+import {companyHunterScraper, resetCompanyHunterCycle} from "./scrapers/companyHunter/companyHunterScraper";
 
 interface ScraperSession {
     scraper: Scraper;
@@ -29,12 +30,13 @@ async function main() {
     if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir);
 
     const scrapersToRun: Scraper[] = [
-        gupyScraper,
-        linkedinScraper,
-
-        programathorScraper,
-        weWorkRemotelyScraper,
-        remoteOkScraper,
+        companyHunterScraper,
+        // gupyScraper,
+        // linkedinScraper,
+        //
+        // programathorScraper,
+        // weWorkRemotelyScraper,
+        // remoteOkScraper,
 
 
     ];
@@ -99,7 +101,7 @@ async function main() {
 
             await browser.close();
             browser = null;
-
+            resetCompanyHunterCycle();
             console.log(`\n--- ✅ Ciclo #${cycleCount} finalizado. Todas as fontes foram esgotadas.`);
             const waitTimeMinutes = config.SEARCH_INTERVAL_MINUTES || 30;
             console.log(`--- 🕒 Aguardando ~${waitTimeMinutes} minutos até o próximo ciclo completo... ---`);

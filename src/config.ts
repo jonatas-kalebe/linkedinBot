@@ -30,7 +30,7 @@ export default {
         {keyword: 'Java', contract: 'PJ', expertise: 'Pleno'},
         {keyword: 'Java', contract: 'PJ', expertise: 'Sênior'},
         {keyword: 'Angular', contract: 'PJ', expertise: 'Pleno'},
-        {keyword: 'Angular', contract: 'PJ', expertise: 'Sênior'},
+        {keyword: 'Angular', contract: 'PJ', expertise: 'SêniorJOB_DESCRIPTION_LANGUAGES'},
     ],
 
     REMOTIVE_SEARCHES: [
@@ -61,6 +61,10 @@ export default {
         "Fullstack Developer",
         "Backend Developer Pleno"
     ],
+    COMPANY_HUNTER_CONFIG: {
+        Y_COMBINATOR_COMPANIES_URL: 'https://www.ycombinator.com/companies',
+        MANUAL_COMPANY_LIST_PATH: './company-list.json' // Caminho para a lista manual
+    },
 
     LOCATION: "Worldwide",
     JOB_DESCRIPTION_LANGUAGES: ["portuguese", "english"],

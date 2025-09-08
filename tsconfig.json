@@ -10,15 +10,16 @@
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
-        "moduleResolution": "node16",
-        "types": [
-            "node"
-        ],
+        "moduleResolution": "node", // <-- AQUI ESTÁ A ÚNICA MUDANÇA
         "sourceMap": true,
-        "inlineSourceMap": false,
-        "inlineSources": true,
-        "declaration": false,
-        "noEmit": false,
-        "outDir": "./.ts-node"
-    }
+        "outDir": "./.ts-node",
+
+        "typeRoots": [
+            "./node_modules/@types",
+            "./src/types"
+        ]
+    },
+    "include": [
+        "src/**/*"
+    ]
 }
