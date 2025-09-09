@@ -1,81 +1,57 @@
-// Usamos "import type" para obter os tipos sem causar erros de runtime.
-import type { Low } from 'lowdb';
+const low = require('lowdb')
+const FileSync = require('lowdb/adapters/FileSync')
 
-export type CompanyStatus = 'discovered' | 'intelligence_gathered' | 'jobs_scraped' | 'failed';
+export type CompanyStatus = 'discovered' | 'intelligence_gathered' | 'jobs_scraped' | 'failed'
 
 export interface CompanyEntry {
-    name: string;
-    domain: string;
-    source: string;
-    status: CompanyStatus;
-    careersUrl?: string;
-    isRemoteFriendly?: boolean;
-    techStack?: string[];
-    lastUpdated: string;
+    name: string
+    domain: string
+    source: string
+    status: CompanyStatus
+    careersUrl?: string
+    isRemoteFriendly?: boolean
+    techStack?: string[]
+    lastUpdated: string
 }
 
 type Schema = {
-    companies: CompanyEntry[];
-};
-
-let db: Low<Schema> | null = null;
-
-async function getDB(): Promise<Low<Schema>> {
-    if (db) {
-        return db;
-    }
-    // Carrega dinamicamente o CÓDIGO REAL do lowdb em tempo de execução
-    const { Low } = await import('lowdb');
-    const { JSONFile } = await import('lowdb/node');
-
-    const adapter = new JSONFile<Schema>('company_hunter_db.json');
-    db = new Low<Schema>(adapter, { companies: [] });
-
-    await db.read();
-    return db;
+    companies: CompanyEntry[]
 }
 
+// @ts-ignore
+const adapter = new FileSync<Schema>('company_hunter_db.json')
+const db = low(adapter)
+
+db.defaults({ companies: [] }).write()
+
 export const companyDB = {
-    async addDiscoveredCompanies(companies: { name: string, domain: string, source: string }[]) {
-        const database = await getDB();
-        let addedCount = 0;
-
+    addDiscoveredCompanies(companies: { name: string; domain: string; source: string }[]) {
+        let addedCount = 0
+        const companiesInDb = db.get('companies')
         companies.forEach(company => {
-            const exists = database.data.companies.some(c => c.domain === company.domain);
+            const exists = companiesInDb.find({ domain: company.domain }).value()
             if (!exists) {
-                database.data.companies.push({
-                    ...company,
-                    status: 'discovered',
-                    lastUpdated: new Date().toISOString()
-                });
-                addedCount++;
+                companiesInDb
+                    .push({ ...company, status: 'discovered', lastUpdated: new Date().toISOString() })
+                    .write()
+                addedCount++
             }
-        });
-
-        if (addedCount > 0) {
-            console.log(`[DB] Adicionadas ${addedCount} novas empresas.`);
-            await database.write();
-        }
+        })
+        if (addedCount > 0) console.log(`[DB] Adicionadas ${addedCount} novas empresas.`)
     },
 
-    async getNextCompanyForIntelligence(): Promise<CompanyEntry | undefined> {
-        const database = await getDB();
-        await database.read();
-        return database.data.companies.find(c => c.status === 'discovered');
+    getNextCompanyForIntelligence(): CompanyEntry | undefined {
+        return db.get('companies').find({ status: 'discovered' }).value()
     },
 
-    async getNextCompanyForJobScraping(): Promise<CompanyEntry | undefined> {
-        const database = await getDB();
-        await database.read();
-        return database.data.companies.find(c => c.status === 'intelligence_gathered' && c.careersUrl);
+    getNextCompanyForJobScraping(): CompanyEntry | undefined {
+        return db.get('companies')
+            .value()
+            .find((c: { status: string; careersUrl: any }) => c.status === 'intelligence_gathered' && c.careersUrl)
     },
 
-    async updateCompany(domain: string, updates: Partial<CompanyEntry>) {
-        const database = await getDB();
-        const company = database.data.companies.find(c => c.domain === domain);
-        if (company) {
-            Object.assign(company, updates, { lastUpdated: new Date().toISOString() });
-            await database.write();
-        }
+    updateCompany(domain: string, updates: Partial<CompanyEntry>) {
+        const company = db.get('companies').find({ domain })
+        if (company.value()) company.assign({ ...updates, lastUpdated: new Date().toISOString() }).write()
     }
-};
+}
