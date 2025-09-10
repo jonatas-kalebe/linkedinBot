@@ -95,7 +95,7 @@ async function main() {
 
                 if (activeScrapers.length > 0 && jobsFoundInRound === 0) {
                     console.log("--- ⏳ Nenhuma vaga nova em todas as fontes nesta rodada. Aguardando um pouco antes de tentar novamente...");
-                    await humanizedWait(page, 20000, 40000);
+                    // await humanizedWait(page, 20000, 40000);
                 }
             }
 
@@ -105,7 +105,7 @@ async function main() {
             console.log(`\n--- ✅ Ciclo #${cycleCount} finalizado. Todas as fontes foram esgotadas.`);
             const waitTimeMinutes = config.SEARCH_INTERVAL_MINUTES || 30;
             console.log(`--- 🕒 Aguardando ~${waitTimeMinutes} minutos até o próximo ciclo completo... ---`);
-            await new Promise(res => setTimeout(res, (waitTimeMinutes * 60 * 1000)));
+            // await new Promise(res => setTimeout(res, (waitTimeMinutes * 60 * 1000)));
 
         } catch (error: any) {
             console.error(`\n🚨 ERRO FATAL NO ORQUESTRADOR (Ciclo #${cycleCount}): ${error.message}`);
