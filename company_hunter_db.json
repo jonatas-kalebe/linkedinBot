@@ -1,0 +1,54 @@
+{
+  "companies": [
+    {
+      "name": "Startup School",
+      "domain": "startupschool.org",
+      "source": "YCombinator",
+      "status": "intelligence_gathered",
+      "lastUpdated": "2025-09-10T02:25:21.895Z",
+      "isRemoteFriendly": false
+    },
+    {
+      "name": "TwitterTwitter",
+      "domain": "twitter.com",
+      "source": "YCombinator",
+      "status": "failed",
+      "lastUpdated": "2025-09-10T02:29:30.743Z",
+      "careersUrl": "https://careers.x.com/",
+      "isRemoteFriendly": false
+    },
+    {
+      "name": "FacebookFacebook",
+      "domain": "facebook.com",
+      "source": "YCombinator",
+      "status": "jobs_scraped",
+      "lastUpdated": "2025-09-10T02:29:44.390Z",
+      "careersUrl": "https://www.facebook.com/careers/?ref=pf",
+      "isRemoteFriendly": false
+    },
+    {
+      "name": "InstagramInstagram",
+      "domain": "instagram.com",
+      "source": "YCombinator",
+      "status": "jobs_scraped",
+      "lastUpdated": "2025-09-10T02:31:35.175Z",
+      "careersUrl": "https://about.instagram.com/about-us/careers",
+      "isRemoteFriendly": false
+    },
+    {
+      "name": "LinkedInLinkedIn",
+      "domain": "linkedin.com",
+      "source": "YCombinator",
+      "status": "intelligence_gathered",
+      "lastUpdated": "2025-09-10T02:25:21.896Z"
+    },
+    {
+      "name": "YoutubeYouTube",
+      "domain": "youtube.com",
+      "source": "YCombinator",
+      "status": "intelligence_gathered",
+      "lastUpdated": "2025-09-10T02:25:21.903Z",
+      "isRemoteFriendly": false
+    }
+  ]
+}

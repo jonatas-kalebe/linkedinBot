@@ -52,6 +52,22 @@ export const companyDB = {
 
     updateCompany(domain: string, updates: Partial<CompanyEntry>) {
         const company = db.get('companies').find({ domain })
-        if (company.value()) company.assign({ ...updates, lastUpdated: new Date().toISOString() }).write()
+        if (company.value()) {
+            company.assign({ ...updates, lastUpdated: new Date().toISOString() }).write()
+        }
+    },
+
+    resetScrapingStatus() {
+        console.log('[DB] Reiniciando status das empresas para um novo ciclo de scraping.');
+        const companies = db.get('companies');
+        const companiesToReset = companies.filter((c: CompanyEntry) => c.status === 'jobs_scraped' || c.status === 'failed').value();
+
+        companiesToReset.forEach((c: CompanyEntry) => {
+                companies.find({ domain: c.domain })
+                    .assign({ status: 'intelligence_gathered', lastUpdated: new Date().toISOString() })
+                    .write();
+        });
+
+        console.log(`[DB] Status de ${companiesToReset.length} empresas reiniciado.`);
     }
 }

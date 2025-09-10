@@ -1,73 +1,19 @@
-# Linkedin easy apply bot
+Dear MelodyIQ Team,
 
-A tool designed to save you time when applying to linkedin jobs by applying to the jobs automatically for you
+I am writing to express my enthusiastic interest in the freelance mid-level backend developer position. The opportunity to contribute to a product that shapes global campaigns for the world’s biggest artists is incredibly exciting.
 
-To run this tool follow the following steps
+My profile aligns closely with what you’re looking for. I am a detail-oriented Backend Developer with over four years of experience building and maintaining robust backend systems. My professional summary highlights a proven ability to handle daily maintenance, debug production issues, and enhance system performance and reliability. I am also adept at refactoring legacy JavaScript to TypeScript, implementing automated tests, and have direct experience with database migrations and CI/CD improvements. I believe in a pragmatic approach, focusing on delivering simple and maintainable solutions, which seems to be a core value on your team.
 
-### First step, install the project's dependencies:
-```
-npm i
-```
+One of my most relevant experiences was at BM Solution, where I led the re-architecture of the Electronic Invoice (NFe) module. This involved designing and implementing robust Java services for seamless, critical communication with government tax APIs, orchestrating complex data flows to ensure stability for clients. This project required the same precision, reliability, and focus on data integrity with large databases that is essential for managing music analytics tools. My expertise is particularly strong with large-scale PostgreSQL databases, a key requirement for this role.
 
-### Second step, copy the sample configuration file to your environment and fill it with your information
-```
-cp config.ts config.ts
-```
-config.ts
-```TS
-export default {
-    LINKEDIN_EMAIL: "your-linkedin-email",
-  LINKEDIN_PASSWORD: "your-linkedin-password",
+I am proficient with much of your tech stack, including Node.js, TypeScript, GCP, GitHub Actions, and have familiarity with Grafana and Redis. While React is not a primary skill, I am a curious and fast learner, fully prepared to become proficient to meet your needs.
 
-  // JOB SEARCH PARAMETERS
-  KEYWORDS: "your-job-search-keywords",
-  LOCATION: "your-job-search-location",
-  WORKPLACE: {
-    REMOTE: true, // whether-you-want-remote-jobs-or-not(true/false)
-    ON_SITE: true, // whether-you-want-on-site-jobs-or-not(true/false)
-    HYBRID: true, // whether-you-want-hybrid-jobs-or-not(true/false)
-  },
-  JOB_TITLE: "a-regex-to-match-with-the-job-title",
-  JOB_DESCRIPTION: "a-regex-to-match-with-the-job-description",
+Based in Brazil (GMT-3) , my schedule provides a significant daily overlap with the Central European Timezone, and I am seeking a 100% remote freelance opportunity where I can contribute to a fast-moving SaaS startup just like MelodyIQ.
 
-  // FORM DATA
-  PHONE: "your-phone-number",
-  CV_PATH: "path-to-your-cv",
-  COVER_LETTER_PATH: "path-to-your-cover-letter",
-  HOME_CITY: "where-you-are-based",
-  YEARS_OF_EXPERIENCE: { // an-object-with-the-skills-as-keys-and-the-years-of-experience-as-values
-    "angular": 5,
-    "react.js": 6,
-  },
-  LANGUAGE_PROFICIENCY: {  // an-object-with-the-languages-as-keys-and-your-proficiency-as-values
-    "english": "professional",
-    "spanish": "native",
-    "french": "professional"
-  },
-  REQUIRES_VISA_SPONSORSHIP: false, // whether-you-require-visa-sponsorship-or-not(true/false)
-  TEXT_FIELDS: { // an-object-with-the-regexes-to-match-input-labels-as-keys-and-the-input-values-as-values (text value)
-    "salary": "60k"
-  },
-  BOOLEANS: { // an-object-with-the-regexes-to-match-input-labels-as-keys-and-the-input-values-as-values (true/false value)
-    "bachelhor|bacharelado": true,
-    "authorized": true
-  },
-  MULTIPLE_CHOICE_FIELDS: { // an-object-with-the-regexes-to-match-input-labels-as-keys-and-the-input-values-as-values (option value)
-    "pronouns": "They/them"
-  },
+Thank you for your time and consideration. My CV is attached for your review.
 
-  // OTHER SETTINGS
-  SINGLE_PAGE: false, // whether-you-want-the-applied-job-windows-to-close-after-applying(true/false)
-}
-```
+Best regards,
 
-### Third step, run the program
-
-```
-npm run apply
-```
-
-To run the program without pressing the submit form button (for testing purposes)
-```
-npm run start
-```
+Jonatas Kalebe Machado  
+jonataskalebe900@gmail.com  
+linkedin.com/in/jonataskalebe
