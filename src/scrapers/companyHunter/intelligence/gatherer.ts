@@ -1,67 +1,59 @@
+// ARQUIVO: src/scrapers/companyHunter/intelligence/gatherer.ts
+
 import { Page, HTTPResponse } from 'puppeteer';
 import { CompanyEntry } from '../database';
-// Removemos o 'import Wappalyzer from 'wappalyzer';' do topo
-import type { Technology } from 'wappalyzer';
 
+/**
+ * Coleta a inteligência mínima necessária: a URL da página de carreiras.
+ */
 export async function gatherIntelligence(page: Page, company: CompanyEntry): Promise<Partial<CompanyEntry>> {
-    console.log(`[Intelligence] Coletando dados para ${company.name}...`);
+    console.log(`[Intelligence] Buscando "Carreiras" ou e-mail de contato para ${company.name}...`);
     const intelligence: Partial<CompanyEntry> = {};
     const url = `https://${company.domain}`;
 
     try {
-        const response: HTTPResponse | null = await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
-        if (!response) {
-            throw new Error('A navegação não retornou uma resposta.');
-        }
+        await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
 
-        const careersHandle = await page.evaluateHandle(() => {
-            const selectors = ['a[href*="career"]', 'a[href*="jobs"]', 'a[href*="vagas"]'];
+        // ETAPA 1: Tentar encontrar a página de Carreiras
+        let careersUrl = await page.evaluate(() => {
+            const selectors = ['a[href*="career"]', 'a[href*="jobs"]', 'a[href*="vagas"]', 'a[href*="work"]', 'a[href*="join"]'];
             const link = Array.from(document.querySelectorAll(selectors.join(',')))
-                .find(l => /(career|jobs|vagas|work with us|trabalhe conosco)/i.test(l.textContent || ''));
-            return link;
+                .find(l => /(career|jobs|vagas|work with us|trabalhe conosco|join us|opportunities)/i.test(l.textContent || ''));
+            return link ? new URL((link as HTMLAnchorElement).href, document.baseURI).href : null;
         });
-        if (careersHandle.asElement()) {
-            intelligence.careersUrl = await careersHandle.asElement()!.evaluate(el => (el as HTMLAnchorElement).href);
-        }
 
-        const pageText = await page.evaluate(() => document.body.innerText);
-        intelligence.isRemoteFriendly = /(remote|distributed|work from anywhere)/i.test(pageText);
+        if (careersUrl) {
+            console.log(`  - ✅ Página de carreiras encontrada: ${careersUrl}`);
+            intelligence.careersUrl = careersUrl;
+        } else {
+            // ETAPA 2: Fallback - Se não encontrou "Carreiras", procurar por e-mail
+            console.log(`  - ⚠️  Página de "Carreiras" não encontrada. Procurando por e-mail de contato...`);
+            const prospectEmail = await page.evaluate(() => {
+                const mailtoLinks = Array.from(document.querySelectorAll('a[href^="mailto:"]'));
+                const priorityEmails = ['jobs@', 'careers@', 'contact@', 'hello@', 'support@'];
 
-        // --- LÓGICA CORRIGIDA COM IMPORTAÇÃO DINÂMICA ---
-        try {
-            console.log(`[Wappalyzer Local] Analisando tecnologias para ${url}...`);
-
-            // 1. Importa dinamicamente a classe Wappalyzer DENTRO da função
-            const { default: Wappalyzer } = await import('wappalyzer');
-
-            const wappalyzer = new Wappalyzer();
-            await wappalyzer.init();
-
-            const html = await page.content();
-            const headers = response.headers();
-            const finalUrl = page.url();
-
-            const results = await wappalyzer.analyze({
-                url: finalUrl,
-                html: html,
-                headers: headers,
+                for (const priority of priorityEmails) {
+                    const foundLink = mailtoLinks.find(link => (link as HTMLAnchorElement).href.includes(priority));
+                    if (foundLink) {
+                        return (foundLink as HTMLAnchorElement).href.replace('mailto:', '');
+                    }
+                }
+                // Se não achar um prioritário, retorna o primeiro que encontrar
+                return mailtoLinks.length > 0 ? (mailtoLinks[0] as HTMLAnchorElement).href.replace('mailto:', '') : null;
             });
 
-            if (results && results.technologies) {
-                intelligence.techStack = results.technologies.map((tech: Technology) => tech.name);
+            if (prospectEmail) {
+                console.log(`  - ✅ E-mail de prospecção encontrado: ${prospectEmail}`);
+                intelligence.prospectEmail = prospectEmail;
+            } else {
+                console.log(`  - ❌ Nenhum link de "Carreiras" ou e-mail de contato encontrado para ${company.name}.`);
             }
-
-            await wappalyzer.destroy();
-        } catch (wappalyzerError: any) {
-            console.error(`[Wappalyzer Local] Erro ao analisar tecnologias: ${wappalyzerError.message}`);
         }
-        // --- FIM DA LÓGICA CORRIGIDA ---
 
-        console.log(`[Intelligence] Coleta finalizada para ${company.name}. URL de carreira: ${intelligence.careersUrl ? 'Sim' : 'Não'}`);
+        return intelligence;
+
     } catch (error: any) {
         console.error(`[Intelligence] Erro ao processar ${company.domain}: ${error.message}`);
-        intelligence.status = 'failed';
+        throw error;
     }
-
-    return intelligence;
 }

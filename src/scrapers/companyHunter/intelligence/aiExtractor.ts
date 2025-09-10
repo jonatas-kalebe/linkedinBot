@@ -1,33 +1,30 @@
+// ARQUIVO: src/scrapers/companyHunter/intelligence/aiExtractor.ts
+
 import { Page } from 'puppeteer';
-import {cleanHtmlForAnalysis, cleanHtmlForAnalysisCheerio} from "../../../utils/htmlUtils";
-import {generateWithRetryLite} from "../../../services/geminiService";
+import { generateWithRetryLite } from '../../../services/geminiService';
+import { cleanHtmlForAnalysisCheerio } from '../../../utils/htmlUtils';
 
 /**
- * Usa a IA para analisar o HTML de uma página e extrair dinamicamente os detalhes de uma vaga.
- * @param page A instância da página do Puppeteer para obter o HTML.
- * @param jobUrl A URL da vaga, para contexto.
- * @returns Um objeto com os dados extraídos ou null em caso de falha.
+ * Usa a IA para analisar o HTML de uma PÁGINA DE VAGA e extrair os detalhes.
  */
 export async function extractJobDataWithAI(page: Page, jobUrl: string): Promise<{ title: string, company: string, description: string } | null> {
-    console.log(`- 🤖 Iniciando extração dinâmica com IA para: ${jobUrl.substring(0, 80)}...`);
+    console.log(`- 🤖 Iniciando extração de detalhes com IA para: ${jobUrl.substring(0, 80)}...`);
     try {
         const rawHtml = await page.content();
-        const cleanedHtmlCheerio = cleanHtmlForAnalysisCheerio(rawHtml);
-        const cleanedHtml = cleanHtmlForAnalysis(cleanedHtmlCheerio);
+        const cleanedHtml = cleanHtmlForAnalysisCheerio(rawHtml);
 
         const prompt = `
-          **TAREFA:** Você é um especialista em parsing de HTML. Sua função é extrair informações de uma página de vaga de emprego a partir do HTML.
+          **TAREFA:** Você é um especialista em parsing de HTML. Extraia as informações de uma vaga de emprego do HTML abaixo.
 
           **CONTEXTO:**
           - URL da vaga: ${jobUrl}
-          - O HTML abaixo representa o conteúdo desta página.
 
           **INSTRUÇÕES:**
-          1. Extraia: o título (title), o nome da empresa (company) e a descrição completa da vaga (description).
+          1. Extraia: o título (title), o nome da empresa (company) e a descrição completa (description).
           2. Sua resposta deve ser **APENAS UM OBJETO JSON VÁLIDO**.
           3. A estrutura deve ser: { "title": "...", "company": "...", "description": "..." }
 
-          **HTML LIMPO PARA ANÁLISE:**
+          **HTML PARA ANÁLISE:**
           \`\`\`html
           ${cleanedHtml}
           \`\`\`
@@ -39,6 +36,10 @@ export async function extractJobDataWithAI(page: Page, jobUrl: string): Promise<
 
         if (extractedData.title && extractedData.description) {
             console.log(`- ✅ IA extraiu com sucesso: "${extractedData.title}"`);
+            // Se a IA não conseguir o nome da empresa, tentamos pegar do título da página
+            if (!extractedData.company) {
+                extractedData.company = await page.title();
+            }
             return extractedData;
         } else {
             console.warn('- ⚠️ A IA retornou um JSON, mas faltam dados essenciais.');

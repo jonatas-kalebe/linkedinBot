@@ -1,65 +1,38 @@
-// src/scrapers/companyHunter/discovery/ycombinator/fetcher.ts
-import { Page } from 'puppeteer'
-import selectors from './selectors'
-import { humanizedWait } from '../../../../utils/humanization'
-import { DiscoveredCompany } from '../discovery.interface'
+// ARQUIVO: src/scrapers/companyHunter/discovery/ycombinator/fetcher.ts
+import { Page } from 'puppeteer';
+import selectors from './selectors';
+import { humanizedWait } from '../../../../utils/humanization';
+import { DiscoveredCompany } from '../discovery.interface';
+
+const YC_URL = 'https://www.ycombinator.com/companies?batch=W24&batch=S24';
 
 export async function fetchYCombinatorCompanies(page: Page): Promise<DiscoveredCompany[]> {
-  const YC_URL = 'https://www.ycombinator.com/companies'
-  try {
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36')
-    await page.goto(YC_URL, { waitUntil: 'networkidle2', timeout: 90000 })
-    await humanizedWait(page, 4000, 6000)
-
-    for (let i = 0; i < 3; i++) {
-      await page.evaluate('window.scrollBy(0, window.innerHeight * 2)')
-      await humanizedWait(page, 2500, 4000)
-    }
-
+    console.log(`[Discovery/YC] Buscando startups dos batches mais recentes...`);
     try {
-      await page.waitForSelector(selectors.companyCard, { timeout: 15000 })
-    } catch {}
-
-    const companiesPrimary = await page.$$eval(
-      selectors.companyCard,
-      (elements, nameSelector) =>
-        elements
-          .map(el => {
-            const nameElement = el.querySelector(nameSelector as string)
-            const name = nameElement ? (nameElement.textContent || '').trim() : ''
-            const websiteLink = el.querySelector('a[href^="http"]') as HTMLAnchorElement | null
-            let domain = ''
-            if (websiteLink && websiteLink.href && !websiteLink.href.includes('ycombinator.com')) {
-              try {
-                domain = new URL(websiteLink.href).hostname.replace(/^www\./, '')
-              } catch {}
-            }
-            return { name, domain }
-          })
-          .filter(c => c.name && c.domain),
-      selectors.companyName
-    )
-
-    if (companiesPrimary.length > 0) return companiesPrimary
-
-    const fallback = await page.$$eval('a[href^="http"]', as =>
-      as
-        .map(a => {
-          const href = (a as HTMLAnchorElement).href
-          const text = (a.textContent || '').trim()
-          let domain = ''
-          try {
-            const u = new URL(href)
-            if (!/ycombinator\.com$/i.test(u.hostname)) domain = u.hostname.replace(/^www\./, '')
-          } catch {}
-          return { name: text, domain }
-        })
-        .filter(x => x.name && x.domain)
-    )
-
-    return fallback.slice(0, 100)
-  } catch {
-    await page.screenshot({ path: 'error_yc_discovery.png', fullPage: true })
-    return []
-  }
+        await page.goto(YC_URL, { waitUntil: 'networkidle2', timeout: 90000 });
+        let previousHeight;
+        while (true) {
+            previousHeight = await page.evaluate('document.body.scrollHeight');
+            await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
+            await humanizedWait(page, 2000, 4000);
+            const newHeight = await page.evaluate('document.body.scrollHeight');
+            if (newHeight === previousHeight) break;
+        }
+        const companies = await page.$$eval(selectors.companyCard, (elements, nameSelector) =>
+                elements.map(el => {
+                    const name = el.querySelector(nameSelector)?.textContent?.trim() || '';
+                    const websiteLinkElement = el.parentElement?.querySelectorAll('a')[1];
+                    let domain = '';
+                    if (websiteLinkElement && websiteLinkElement.href && !websiteLinkElement.href.includes('ycombinator.com')) {
+                        try { domain = new URL(websiteLinkElement.href).hostname.replace(/^www\./, ''); } catch {}
+                    }
+                    return { name, domain };
+                }).filter(c => c.name && c.domain),
+            selectors.companyName);
+        console.log(`[Discovery/YC] Encontradas ${companies.length} startups.`);
+        return companies;
+    } catch (error: any) {
+        console.error(`[Discovery/YC] Falha ao buscar startups: ${error.message}`);
+        return [];
+    }
 }
