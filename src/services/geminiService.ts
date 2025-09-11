@@ -20,6 +20,7 @@ const proModelNameLite = 'gemini-2.5-flash-lite';
 let currentModelIndex = 0;
 
 async function generateContentWithFallback(prompt: string): Promise<string> {
+    currentModelIndex = 0;
     while (currentModelIndex < models.length) {
         try {
             const modelName = models[currentModelIndex];
